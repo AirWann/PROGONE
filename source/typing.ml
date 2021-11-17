@@ -27,6 +27,7 @@ let rec eq_type ty1 ty2 = match ty1, ty2 with
   | Tint, Tint | Tbool, Tbool | Tstring, Tstring -> true
   | Tstruct s1, Tstruct s2 -> s1 == s2
   | Tptr ty1, Tptr ty2 -> eq_type ty1 ty2
+  | Tmany l1, Tmany l2 -> List.equal (eq_type) l1 l2
   | _ -> false
     (* TODO autres types *)
 
@@ -71,11 +72,14 @@ let rec expr env e =
  let e, ty, rt = expr_desc env e.pexpr_loc e.pexpr_desc in
   { expr_desc = e; expr_typ = ty }, rt
 
-and expr_desc env loc = function
+and expr_desc env loc = function (* TODO TODO TODO*)
   | PEskip ->
      TEskip, tvoid, false
   | PEconstant c ->
-    (* TODO *) TEconstant c, tvoid, false
+     match c with
+     |Cbool b -> TEconstant c, Tbool, false
+     |Cint i -> TEconstant c, Tint, false
+     |Cstring s -> TEconstant c, Tstring, false
   | PEbinop (op, e1, e2) ->
     (* TODO *) assert false
   | PEunop (Uamp, e1) ->
