@@ -31,7 +31,7 @@ let file =
 let debug = !debug
 let type_only = !type_only
 
-let report_loc (b,e) =
+let report_loc (b,e) = 
   let l = b.pos_lnum in
   let fc = b.pos_cnum - b.pos_bol in
   let lc = e.pos_cnum - b.pos_bol in

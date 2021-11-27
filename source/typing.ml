@@ -99,7 +99,6 @@ and expr_desc env loc = function
      (* TODO *) assert false
   | PEnil ->
      (* TODO *) assert false
-  | PEident {id=id} ->
      (* TODO *) (try let v = Env.find id env in TEident v, v.v_typ, false
       with Not_found -> error loc ("unbound variable " ^ id))
   | PEdot (e, id) ->
@@ -119,7 +118,11 @@ let found_main = ref false
 
 (* 1. declare structures *)
 let phase1 = function
-  | PDstruct { ps_name = { id = id; loc = loc }} -> (* TODO *) ()
+  | PDstruct { ps_name = { id = id; loc = loc }} -> (* TODO *)
+    if Hashtbl.mem h id then
+      raise Error(loc, "Deux structures ont le même nom")
+    else
+      Hashtbl.add h id ()
   | PDfunction _ -> ()
 
 let sizeof = function
@@ -147,6 +150,7 @@ let decl = function
 let file ~debug:b (imp, dl) =
   debug := b;
   (* fmt_imported := imp; *)
+  let h = Hashtbl.create ();
   List.iter phase1 dl;
   List.iter phase2 dl;
   if not !found_main then error dummy_loc "missing method main";

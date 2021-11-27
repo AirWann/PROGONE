@@ -2,5 +2,7 @@
     "makefile.extensionOutputFolder": "./.vscode",
     "ocaml.sandbox": {
         "kind": "global"
-    }
+    },
+    "ocaml.terminal.shell.windows": "C:\\Windows\\System32\\bash.exe"
+        
 }
