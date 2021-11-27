@@ -1,18 +1,10 @@
 # dune build @all
 # OCAMLPARAM: unset
-<<<<<<< HEAD
-# Workspace root: /mnt/c/Users/elpub/github/PROGONE/source
-$ /usr/bin/nproc > /tmp/dunee000fc.output 2> /dev/null
+# Workspace root: /home/airwann/nvgit/PROGONE/source
+$ /usr/bin/nproc > /tmp/dunee4d5cc.output 2> /dev/null
 # Auto-detected concurrency: 4
 # disable binary cache
-$ /usr/bin/ocamlc.opt -config > /tmp/dune499c10.output
-=======
-# Workspace root: /users/dptinfo/loulergue/Bureau/projprog/PROGONE/source
-$ /usr/bin/nproc > /tmp/dune8fda36.output 2> /dev/null
-# Auto-detected concurrency: 8
-# disable binary cache
-$ /users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlc.opt -config > /tmp/dune0dfea9.output
->>>>>>> fd66bf7952cd2f64b84d0b01b29a7c3a2573c5ac
+$ /usr/bin/ocamlc.opt -config > /tmp/dunea9cd97.output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"
@@ -21,92 +13,69 @@ $ /users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlc.opt -config > /tmp/du
 #  ; for_host = None
 #  ; fdo_target_exe = None
 #  ; build_dir = "default"
-#  ; toplevel_path =
-#      Some
-#        External "/users/dptinfo/loulergue/.opam/ocaml-variants/lib/toplevel"
-#  ; ocaml_bin = External "/users/dptinfo/loulergue/.opam/ocaml-variants/bin"
-#  ; ocaml =
-#      Ok External "/users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocaml"
-#  ; ocamlc =
-#      External "/users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlc.opt"
-#  ; ocamlopt =
-#      Ok
-#        External
-#          "/users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlopt.opt"
-#  ; ocamldep =
-#      Ok
-#        External
-#          "/users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamldep.opt"
-#  ; ocamlmklib =
-#      Ok
-#        External
-#          "/users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlmklib.opt"
+#  ; toplevel_path = Some External "/home/airwann/.opam/default/lib/toplevel"
+#  ; ocaml_bin = External "/usr/bin"
+#  ; ocaml = Ok External "/home/airwann/.opam/default/bin/ocaml"
+#  ; ocamlc = External "/usr/bin/ocamlc.opt"
+#  ; ocamlopt = Ok External "/usr/bin/ocamlopt.opt"
+#  ; ocamldep = Ok External "/usr/bin/ocamldep.opt"
+#  ; ocamlmklib = Ok External "/usr/bin/ocamlmklib.opt"
 #  ; env =
 #      map
-#        { "DUNE_OCAML_HARDCODED" :
-#            "/users/dptinfo/loulergue/.opam/ocaml-variants/lib"
-#        ; "DUNE_OCAML_STDLIB" :
-#            "/users/dptinfo/loulergue/.opam/ocaml-variants/lib/ocaml"
-#        ; "DUNE_SOURCEROOT" :
-#            "/users/dptinfo/loulergue/Bureau/projprog/PROGONE/source"
-#        ; "INSIDE_DUNE" :
-#            "/users/dptinfo/loulergue/Bureau/projprog/PROGONE/source/_build/default"
+#        { "DUNE_OCAML_HARDCODED" : "/home/airwann/.opam/default/lib"
+#        ; "DUNE_OCAML_STDLIB" : "/usr/lib/ocaml"
+#        ; "DUNE_SOURCEROOT" : "/home/airwann/nvgit/PROGONE/source"
+#        ; "INSIDE_DUNE" : "/home/airwann/nvgit/PROGONE/source/_build/default"
 #        ; "OCAMLFIND_IGNORE_DUPS_IN" :
-#            "/users/dptinfo/loulergue/Bureau/projprog/PROGONE/source/_build/install/default/lib"
+#            "/home/airwann/nvgit/PROGONE/source/_build/install/default/lib"
 #        ; "OCAMLPATH" :
-#            "/users/dptinfo/loulergue/Bureau/projprog/PROGONE/source/_build/install/default/lib"
+#            "/home/airwann/nvgit/PROGONE/source/_build/install/default/lib"
 #        ; "OCAMLTOP_INCLUDE_PATH" :
-#            "/users/dptinfo/loulergue/Bureau/projprog/PROGONE/source/_build/install/default/lib/toplevel"
+#            "/home/airwann/nvgit/PROGONE/source/_build/install/default/lib/toplevel"
 #        ; "OCAML_COLOR" : "always"
 #        ; "OPAMCOLOR" : "always"
 #        }
-#  ; findlib_path =
-#      [ External "/users/dptinfo/loulergue/.opam/ocaml-variants/lib" ]
+#  ; findlib_path = [ External "/home/airwann/.opam/default/lib" ]
 #  ; arch_sixtyfour = true
 #  ; natdynlink_supported = true
 #  ; supports_shared_libraries = true
 #  ; ocaml_config =
-#      { version = "4.13.1"
-#      ; standard_library_default =
-#          "/users/dptinfo/loulergue/.opam/ocaml-variants/lib/ocaml"
-#      ; standard_library =
-#          "/users/dptinfo/loulergue/.opam/ocaml-variants/lib/ocaml"
+#      { version = "4.08.1"
+#      ; standard_library_default = "/usr/lib/ocaml"
+#      ; standard_library = "/usr/lib/ocaml"
 #      ; standard_runtime = "the_standard_runtime_variable_was_deleted"
 #      ; ccomp_type = "cc"
-#      ; c_compiler = "gcc"
-#      ; ocamlc_cflags =
-#          [ "-O2"; "-fno-strict-aliasing"; "-fwrapv"; "-pthread"; "-fPIC" ]
-#      ; ocamlc_cppflags = [ "-D_FILE_OFFSET_BITS=64" ]
-#      ; ocamlopt_cflags =
-#          [ "-O2"; "-fno-strict-aliasing"; "-fwrapv"; "-pthread"; "-fPIC" ]
-#      ; ocamlopt_cppflags = [ "-D_FILE_OFFSET_BITS=64" ]
+#      ; c_compiler = "x86_64-linux-gnu-gcc"
+#      ; ocamlc_cflags = [ "-O2"; "-fno-strict-aliasing"; "-fwrapv"; "-fPIC" ]
+#      ; ocamlc_cppflags = [ "-D_FILE_OFFSET_BITS=64"; "-D_REENTRANT" ]
+#      ; ocamlopt_cflags = [ "-O2"; "-fno-strict-aliasing"; "-fwrapv" ]
+#      ; ocamlopt_cppflags = [ "-D_FILE_OFFSET_BITS=64"; "-D_REENTRANT" ]
 #      ; bytecomp_c_compiler =
-#          [ "gcc"
+#          [ "x86_64-linux-gnu-gcc"
 #          ; "-O2"
 #          ; "-fno-strict-aliasing"
 #          ; "-fwrapv"
-#          ; "-pthread"
 #          ; "-fPIC"
 #          ; "-D_FILE_OFFSET_BITS=64"
+#          ; "-D_REENTRANT"
 #          ]
 #      ; bytecomp_c_libraries = [ "-lm"; "-ldl"; "-lpthread" ]
 #      ; native_c_compiler =
-#          [ "gcc"
+#          [ "x86_64-linux-gnu-gcc"
 #          ; "-O2"
 #          ; "-fno-strict-aliasing"
 #          ; "-fwrapv"
-#          ; "-pthread"
-#          ; "-fPIC"
 #          ; "-D_FILE_OFFSET_BITS=64"
+#          ; "-D_REENTRANT"
 #          ]
 #      ; native_c_libraries = [ "-lm"; "-ldl" ]
-#      ; cc_profile = []
+#      ; cc_profile = [ "-pg" ]
 #      ; architecture = "amd64"
 #      ; model = "default"
 #      ; int_size = 63
 #      ; word_size = 64
 #      ; system = "linux"
-#      ; asm = [ "as" ]
+#      ; asm = [ "x86_64-linux-gnu-as" ]
 #      ; asm_cfi_supported = true
 #      ; with_frame_pointers = false
 #      ; ext_exe = ""
@@ -119,72 +88,42 @@ $ /users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlc.opt -config > /tmp/du
 #      ; systhread_supported = true
 #      ; host = "x86_64-pc-linux-gnu"
 #      ; target = "x86_64-pc-linux-gnu"
-#      ; profiling = false
+#      ; profiling = true
 #      ; flambda = false
 #      ; spacetime = false
-#      ; safe_string = true
-#      ; exec_magic_number = "Caml1999X030"
-#      ; cmi_magic_number = "Caml1999I030"
-#      ; cmo_magic_number = "Caml1999O030"
-#      ; cma_magic_number = "Caml1999A030"
-#      ; cmx_magic_number = "Caml1999Y030"
-#      ; cmxa_magic_number = "Caml1999Z030"
-#      ; ast_impl_magic_number = "Caml1999M030"
-#      ; ast_intf_magic_number = "Caml1999N030"
-#      ; cmxs_magic_number = "Caml1999D030"
-#      ; cmt_magic_number = "Caml1999T030"
+#      ; safe_string = false
+#      ; exec_magic_number = "Caml1999X025"
+#      ; cmi_magic_number = "Caml1999I025"
+#      ; cmo_magic_number = "Caml1999O025"
+#      ; cma_magic_number = "Caml1999A025"
+#      ; cmx_magic_number = "Caml1999Y025"
+#      ; cmxa_magic_number = "Caml1999Z025"
+#      ; ast_impl_magic_number = "Caml1999M025"
+#      ; ast_intf_magic_number = "Caml1999N025"
+#      ; cmxs_magic_number = "Caml1999D025"
+#      ; cmt_magic_number = "Caml1999T025"
 #      ; natdynlink_supported = true
 #      ; supports_shared_libraries = true
 #      ; windows_unicode = false
 #      }
 #  }
-<<<<<<< HEAD
+$ (cd _build/default && /usr/bin/ocamllex -q -o lexer.ml lexer.mll)
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl main.ml) > _build/default/.main.eobjs/main.ml.d
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl compile.ml) > _build/default/.main.eobjs/compile.ml.d
+$ (cd _build/default && /home/airwann/.opam/default/bin/menhir -v parser.mly --base parser)
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl lib.ml) > _build/default/.main.eobjs/lib.ml.d
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl pretty.ml) > _build/default/.main.eobjs/pretty.ml.d
 $ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl typing.ml) > _build/default/.main.eobjs/typing.ml.d
-> File "typing.ml", line 162, characters 0-0:
+> File "typing.ml", line 106, characters 16-17:
+> 106 |      (* TODO *) (try let v = Env.find id env in TEident v, v.v_typ, false
+>                       ^
 > Error: Syntax error
 [2]
-=======
-$ (cd _build/default && /users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamldep.opt -modules -impl typing.ml) > _build/default/.main.eobjs/typing.ml.d
-$ (cd _build/default && /users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -o .main.eobjs/byte/typing.cmo -c -impl typing.ml)
-> File "typing.ml", line 84, characters 12-37:
-> 84 |   | PEunop (Uneg | Unot | Ustar as op, e1) ->
->                  ^^^^^^^^^^^^^^^^^^^^^^^^^
-> Warning 26 [unused-var]: unused variable op.
-$ (cd _build/default && /users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -o .main.eobjs/byte/compile.cmo -c -impl compile.ml)
-> File "compile.ml", line 87, characters 13-40:
-> 87 |   | TEbinop (Blt | Ble | Bgt | Bge as op, e1, e2) ->
->                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> Warning 26 [unused-var]: unused variable op.
-> File "compile.ml", line 89, characters 13-51:
-> 89 |   | TEbinop (Badd | Bsub | Bmul | Bdiv | Bmod as op, e1, e2) ->
->                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> Warning 26 [unused-var]: unused variable op.
-> File "compile.ml", line 91, characters 13-28:
-> 91 |   | TEbinop (Beq | Bne as op, e1, e2) ->
->                   ^^^^^^^^^^^^^^^
-> Warning 26 [unused-var]: unused variable op.
-$ (cd _build/default && /users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -o .main.eobjs/byte/rewrite.cmo -c -impl rewrite.ml)
-$ (cd _build/default && /users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -o .main.eobjs/native/typing.cmx -c -impl typing.ml)
-> File "typing.ml", line 84, characters 12-37:
-> 84 |   | PEunop (Uneg | Unot | Ustar as op, e1) ->
->                  ^^^^^^^^^^^^^^^^^^^^^^^^^
-> Warning 26 [unused-var]: unused variable op.
-$ (cd _build/default && /users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -o .main.eobjs/byte/main.cmo -c -impl main.ml)
-$ (cd _build/default && /users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -o .main.eobjs/native/compile.cmx -c -impl compile.ml)
-> File "compile.ml", line 87, characters 13-40:
-> 87 |   | TEbinop (Blt | Ble | Bgt | Bge as op, e1, e2) ->
->                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> Warning 26 [unused-var]: unused variable op.
-> File "compile.ml", line 89, characters 13-51:
-> 89 |   | TEbinop (Badd | Bsub | Bmul | Bdiv | Bmod as op, e1, e2) ->
->                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> Warning 26 [unused-var]: unused variable op.
-> File "compile.ml", line 91, characters 13-28:
-> 91 |   | TEbinop (Beq | Bne as op, e1, e2) ->
->                   ^^^^^^^^^^^^^^^
-> Warning 26 [unused-var]: unused variable op.
-$ (cd _build/default && /users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -o .main.eobjs/native/rewrite.cmx -c -impl rewrite.ml)
-$ (cd _build/default && /users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -o .main.eobjs/native/main.cmx -c -impl main.ml)
-$ (cd _build/default && /users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlc.opt -g -o main.bc .main.eobjs/byte/lib.cmo .main.eobjs/byte/typing.cmo .main.eobjs/byte/x86_64.cmo .main.eobjs/byte/compile.cmo .main.eobjs/byte/parser.cmo .main.eobjs/byte/lexer.cmo .main.eobjs/byte/pretty.cmo .main.eobjs/byte/rewrite.cmo .main.eobjs/byte/main.cmo)
-$ (cd _build/default && /users/dptinfo/loulergue/.opam/ocaml-variants/bin/ocamlopt.opt -g -o main.exe .main.eobjs/native/lib.cmx .main.eobjs/native/typing.cmx .main.eobjs/native/x86_64.cmx .main.eobjs/native/compile.cmx .main.eobjs/native/parser.cmx .main.eobjs/native/lexer.cmx .main.eobjs/native/pretty.cmx .main.eobjs/native/rewrite.cmx .main.eobjs/native/main.cmx)
->>>>>>> fd66bf7952cd2f64b84d0b01b29a7c3a2573c5ac
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl rewrite.ml) > _build/default/.main.eobjs/rewrite.ml.d
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl x86_64.ml) > _build/default/.main.eobjs/x86_64.ml.d
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl lexer.ml) > _build/default/.main.eobjs/lexer.ml.d
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -intf tast.mli) > _build/default/.main.eobjs/tast.mli.d
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -intf ast.mli) > _build/default/.main.eobjs/ast.mli.d
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -intf x86_64.mli) > _build/default/.main.eobjs/x86_64.mli.d
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -intf parser.mli) > _build/default/.main.eobjs/parser.mli.d
+$ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl parser.ml) > _build/default/.main.eobjs/parser.ml.d

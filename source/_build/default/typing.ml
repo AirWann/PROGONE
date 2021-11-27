@@ -72,11 +72,14 @@ let rec expr env e =
  let e, ty, rt = expr_desc env e.pexpr_loc e.pexpr_desc in
   { expr_desc = e; expr_typ = ty }, rt
 
-and expr_desc env loc = function
+and expr_desc env loc = function (* TODO TODO TODO*)
   | PEskip ->
      TEskip, tvoid, false
   | PEconstant c ->
-    (* TODO *) TEconstant c, tvoid, false
+     match c with
+     |Cbool b -> TEconstant c, Tbool, false
+     |Cint i -> TEconstant c, Tint, false
+     |Cstring s -> TEconstant c, Tstring, false
   | PEbinop (op, e1, e2) ->
     (* TODO *) assert false
   | PEunop (Uamp, e1) ->
@@ -100,7 +103,6 @@ and expr_desc env loc = function
      (* TODO *) assert false
   | PEnil ->
      (* TODO *) assert false
-  | PEident {id=id} ->
      (* TODO *) (try let v = Env.find id env in TEident v, v.v_typ, false
       with Not_found -> error loc ("unbound variable " ^ id))
   | PEdot (e, id) ->
