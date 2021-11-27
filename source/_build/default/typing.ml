@@ -27,6 +27,7 @@ let rec eq_type ty1 ty2 = match ty1, ty2 with
   | Tint, Tint | Tbool, Tbool | Tstring, Tstring -> true
   | Tstruct s1, Tstruct s2 -> s1 == s2
   | Tptr ty1, Tptr ty2 -> eq_type ty1 ty2
+  | Tmany l1, Tmany l2 -> List.equal (eq_type) l1 l2
   | _ -> false
     (* TODO autres types *)
 
