@@ -13,7 +13,7 @@ exception Error of Ast.location * string
 let error loc e = raise (Error (loc, e))
 
 (* TODO environnement pour les types structure *)
-
+let tablestructs = Hashtbl.create 5
 (* TODO environnement pour les fonctions *)
 
 let rec type_type = function
@@ -128,18 +128,18 @@ and expr_desc env loc = function (* TODO TODO TODO*)
 let found_main = ref false
 
 (* 1. declare structures *)
-let tablefonc = Hashtbl.create 5
+
 let phase1 = function
   | PDstruct { ps_name = { id = id; loc = loc }; ps_fields = l} -> (* TODO *)
-    if Hashtbl.mem tablefonc id then
+    if Hashtbl.mem tablestructs id then
       error loc ("Deux structures ont le même nom" ^ id)
     else
       let h = Hashtbl.create 5 in
       let rec aux = function 
       | [] -> ()
-      | (id, typ)::xs -> Hashtbl.add h id typ; aux xs 
+      | (idf, typf)::xs -> Hashtbl.add h idf typf; aux xs 
       in aux l;
-      Hashtbl.add tablefonc id h
+      Hashtbl.add tablestructs id h
   | PDfunction _ -> ()
 
 let sizeof = function
