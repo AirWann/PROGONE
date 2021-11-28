@@ -22,12 +22,16 @@ let rec type_type = function
   | PTident { id = "string" } -> Tstring
   | PTptr ty -> Tptr (type_type ty)
   | _ -> error dummy_loc ("unknown struct ") (* TODO type structure *)
-
+let rec eqlist l1 l2 cmp = match l1,l2 with
+  |[], [] -> true
+  |[], _ -> false
+  |_, [] -> false
+  | x::q1 , y::q2 -> (cmp x y && eqlist q1 q2 cmp)  
 let rec eq_type ty1 ty2 = match ty1, ty2 with
   | Tint, Tint | Tbool, Tbool | Tstring, Tstring -> true
   | Tstruct s1, Tstruct s2 -> s1 == s2
   | Tptr ty1, Tptr ty2 -> eq_type ty1 ty2
-  | Tmany l1, Tmany l2 -> List.equal (eq_type) l1 l2
+  | Tmany l1, Tmany l2 -> eqlist l1 l2 eq_type
   | _ -> false
     (* TODO autres types *)
 
@@ -76,10 +80,12 @@ and expr_desc env loc = function (* TODO TODO TODO*)
   | PEskip ->
      TEskip, tvoid, false
   | PEconstant c ->
-     match c with
+     (
+      match c with
      |Cbool b -> TEconstant c, Tbool, false
      |Cint i -> TEconstant c, Tint, false
      |Cstring s -> TEconstant c, Tstring, false
+     )
   | PEbinop (op, e1, e2) ->
     (* TODO *) assert false
   | PEunop (Uamp, e1) ->
@@ -102,8 +108,9 @@ and expr_desc env loc = function (* TODO TODO TODO*)
   | PEif (e1, e2, e3) ->
      (* TODO *) assert false
   | PEnil ->
-     (* TODO *) assert false
-     (* TODO *) (try let v = Env.find id env in TEident v, v.v_typ, false
+     (* TODO *) assert false ;
+  | PEident {id=id}->
+     (*TODO*)(try let v = Env.find id env in TEident v, v.v_typ, false
       with Not_found -> error loc ("unbound variable " ^ id))
   | PEdot (e, id) ->
      (* TODO *) assert false
@@ -121,12 +128,13 @@ and expr_desc env loc = function (* TODO TODO TODO*)
 let found_main = ref false
 
 (* 1. declare structures *)
+let tablefonc = Hashtbl.create 5
 let phase1 = function
-  | PDstruct { ps_name = { id = id; loc = loc }} -> (* TODO *)
-    if Hashtbl.mem h id then
-      raise Error(loc, "Deux structures ont le même nom")
+  | PDstruct { ps_name = { id = id; loc = loc }} -> (* done *)
+    if Hashtbl.mem tablefonc id then
+      error loc  ("Deux structures ont le même nom" ^ id)
     else
-      Hashtbl.add h id ()
+      Hashtbl.add tablefonc id ()
   | PDfunction _ -> ()
 
 let sizeof = function
@@ -136,7 +144,7 @@ let sizeof = function
 (* 2. declare functions and type fields *)
 let phase2 = function
   | PDfunction { pf_name={id; loc}; pf_params=pl; pf_typ=tyl; } ->
-     (* TODO *) () 
+     (* TODO + dire quand on a trouvé main (éditer found_main) *) () 
   | PDstruct { ps_name = {id}; ps_fields = fl } ->
      (* TODO *) () 
 
@@ -154,11 +162,11 @@ let decl = function
 let file ~debug:b (imp, dl) =
   debug := b;
   (* fmt_imported := imp; *)
-  let h = Hashtbl.create ();
+
   List.iter phase1 dl;
   List.iter phase2 dl;
   if not !found_main then error dummy_loc "missing method main";
   let dl = List.map decl dl in
   Env.check_unused (); (* TODO variables non utilisees *)
   if imp && not !fmt_used then error dummy_loc "fmt imported but not used";
-  dl
+  dl 
