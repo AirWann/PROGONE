@@ -130,11 +130,16 @@ let found_main = ref false
 (* 1. declare structures *)
 let tablefonc = Hashtbl.create 5
 let phase1 = function
-  | PDstruct { ps_name = { id = id; loc = loc }} -> (* done *)
+  | PDstruct { ps_name = { id = id; loc = loc }; ps_fields = l} -> (* TODO *)
     if Hashtbl.mem tablefonc id then
-      error loc  ("Deux structures ont le même nom" ^ id)
+      error loc ("Deux structures ont le même nom" ^ id)
     else
-      Hashtbl.add tablefonc id ()
+      let h = Hashtbl.create 5 in
+      let rec aux = function 
+      | [] -> ()
+      | (id, typ)::xs -> Hashtbl.add h id typ; aux xs 
+      in aux l;
+      Hashtbl.add tablefonc id h
   | PDfunction _ -> ()
 
 let sizeof = function

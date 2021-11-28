@@ -128,13 +128,18 @@ and expr_desc env loc = function (* TODO TODO TODO*)
 let found_main = ref false
 
 (* 1. declare structures *)
-let tablefonc = Hashtbl.create 5
+let tablefonctions = Hashtbl.create 5
 let phase1 = function
-  | PDstruct { ps_name = { id = id; loc = loc }} -> (* done *)
-    if Hashtbl.mem tablefonc id then
-      error loc  ("Deux structures ont le même nom" ^ id)
+  | PDstruct { ps_name = { id = id; loc = loc }; ps_fields = l} -> (* TODO *)
+    if Hashtbl.mem tablefonctions id then
+      error loc ("Deux structures ont le même nom" ^ id)
     else
-      Hashtbl.add tablefonc id ()
+      let h = Hashtbl.create 5 in
+      let rec aux = function 
+      | [] -> ()
+      | (idf, typf)::xs -> Hashtbl.add h idf typf; aux xs 
+      in aux l;
+      Hashtbl.add tablefonctions id h
   | PDfunction _ -> ()
 
 let sizeof = function
