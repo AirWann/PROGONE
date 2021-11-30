@@ -1,10 +1,10 @@
 # dune build @all
 # OCAMLPARAM: unset
 # Workspace root: /home/airwann/nvgit/PROGONE/source
-$ /usr/bin/nproc > /tmp/dune8fd08f.output 2> /dev/null
+$ /usr/bin/nproc > /tmp/dunee180f0.output 2> /dev/null
 # Auto-detected concurrency: 4
 # disable binary cache
-$ /usr/bin/ocamlc.opt -config > /tmp/dune6b268f.output
+$ /usr/bin/ocamlc.opt -config > /tmp/dune844477.output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"
@@ -109,9 +109,9 @@ $ /usr/bin/ocamlc.opt -config > /tmp/dune6b268f.output
 #  }
 $ (cd _build/default && /usr/bin/ocamldep.opt -modules -impl typing.ml) > _build/default/.main.eobjs/typing.ml.d
 $ (cd _build/default && /usr/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -o .main.eobjs/byte/typing.cmo -c -impl typing.ml)
-> File "typing.ml", line 93, characters 12-37:
-> 93 |   | PEunop (Uneg | Unot | Ustar as op, e1) ->
->                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+> File "typing.ml", line 119, characters 12-37:
+> 119 |   | PEunop (Uneg | Unot | Ustar as op, e1) ->
+>                   ^^^^^^^^^^^^^^^^^^^^^^^^^
 > Warning 26: unused variable op.
 $ (cd _build/default && /usr/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -o .main.eobjs/byte/compile.cmo -c -impl compile.ml)
 > File "compile.ml", line 87, characters 13-40:
@@ -128,11 +128,7 @@ $ (cd _build/default && /usr/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -n
 > Warning 26: unused variable op.
 $ (cd _build/default && /usr/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -o .main.eobjs/byte/rewrite.cmo -c -impl rewrite.ml)
 $ (cd _build/default && /usr/bin/ocamlc.opt -g -bin-annot -I .main.eobjs/byte -no-alias-deps -opaque -o .main.eobjs/byte/main.cmo -c -impl main.ml)
-$ (cd _build/default && /usr/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -o .main.eobjs/native/typing.cmx -c -impl typing.ml)
-> File "typing.ml", line 93, characters 12-37:
-> 93 |   | PEunop (Uneg | Unot | Ustar as op, e1) ->
->                  ^^^^^^^^^^^^^^^^^^^^^^^^^
-> Warning 26: unused variable op.
+$ (cd _build/default && /usr/bin/ocamlc.opt -g -o main.bc .main.eobjs/byte/lib.cmo .main.eobjs/byte/typing.cmo .main.eobjs/byte/x86_64.cmo .main.eobjs/byte/compile.cmo .main.eobjs/byte/parser.cmo .main.eobjs/byte/lexer.cmo .main.eobjs/byte/pretty.cmo .main.eobjs/byte/rewrite.cmo .main.eobjs/byte/main.cmo)
 $ (cd _build/default && /usr/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -o .main.eobjs/native/compile.cmx -c -impl compile.ml)
 > File "compile.ml", line 87, characters 13-40:
 > 87 |   | TEbinop (Blt | Ble | Bgt | Bge as op, e1, e2) ->
@@ -146,7 +142,11 @@ $ (cd _build/default && /usr/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eo
 > 91 |   | TEbinop (Beq | Bne as op, e1, e2) ->
 >                   ^^^^^^^^^^^^^^^
 > Warning 26: unused variable op.
+$ (cd _build/default && /usr/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -o .main.eobjs/native/typing.cmx -c -impl typing.ml)
+> File "typing.ml", line 119, characters 12-37:
+> 119 |   | PEunop (Uneg | Unot | Ustar as op, e1) ->
+>                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+> Warning 26: unused variable op.
 $ (cd _build/default && /usr/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -o .main.eobjs/native/rewrite.cmx -c -impl rewrite.ml)
 $ (cd _build/default && /usr/bin/ocamlopt.opt -g -I .main.eobjs/byte -I .main.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -o .main.eobjs/native/main.cmx -c -impl main.ml)
-$ (cd _build/default && /usr/bin/ocamlc.opt -g -o main.bc .main.eobjs/byte/lib.cmo .main.eobjs/byte/typing.cmo .main.eobjs/byte/x86_64.cmo .main.eobjs/byte/compile.cmo .main.eobjs/byte/parser.cmo .main.eobjs/byte/lexer.cmo .main.eobjs/byte/pretty.cmo .main.eobjs/byte/rewrite.cmo .main.eobjs/byte/main.cmo)
 $ (cd _build/default && /usr/bin/ocamlopt.opt -g -o main.exe .main.eobjs/native/lib.cmx .main.eobjs/native/typing.cmx .main.eobjs/native/x86_64.cmx .main.eobjs/native/compile.cmx .main.eobjs/native/parser.cmx .main.eobjs/native/lexer.cmx .main.eobjs/native/pretty.cmx .main.eobjs/native/rewrite.cmx .main.eobjs/native/main.cmx)

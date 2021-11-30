@@ -15,6 +15,32 @@ let error loc e = raise (Error (loc, e))
 (* TODO environnement pour les types structure *)
 let tablestructs = Hashtbl.create 5
 (* TODO environnement pour les fonctions *)
+module Funcs = struct
+  module M = Map.Make(String)
+  type t = pfunc M.t
+  let empty = M.empty
+  let all_funcs = ref empty
+  let find = fun x -> M.find x !all_funcs
+  let is_def f = M.mem f.pf_name.id !all_funcs
+  let add f = 
+    if is_def f then 
+      error f.pf_name.loc ("fonction "^f.pf_name.id^"déja définie")
+  else
+      all_funcs := M.add f.pf_name.id f !all_funcs
+  let are_vars_unique f = 
+    let table = Hashtbl.create 15 in
+    let rec add_table = function
+      |[] -> ()
+      |p::t -> (* pour tout pparam p, on vérifie que son identifiant n'est pas déjà pris *)
+        if Hashtbl.mem table (fst p).id then
+          error (fst p).loc ("variable"^(fst p).id^"déjà définie dans"^f.pf_name.id)
+        else (
+          Hashtbl.add table (fst p).id ();
+          add_table t
+        )
+    in add_table f.pf_params;
+end
+
 
 let rec type_type = function
   | PTident { id = "int" } -> Tint
@@ -87,7 +113,7 @@ and expr_desc env loc = function (* TODO TODO TODO*)
      |Cstring s -> TEconstant c, Tstring, false
      )
   | PEbinop (op, e1, e2) ->
-    (* TODO *) assert false
+    (* TODO nouveau pattern matching dans lequel on check les types *) assert false
   | PEunop (Uamp, e1) ->
     (* TODO *) assert false
   | PEunop (Uneg | Unot | Ustar as op, e1) ->
@@ -134,24 +160,39 @@ let phase1 = function
     if Hashtbl.mem tablestructs id then
       error loc ("Deux structures ont le même nom" ^ id)
     else
-      let h = Hashtbl.create 5 in
-      let rec aux = function 
-      | [] -> ()
-      | (idf, typf)::xs -> Hashtbl.add h idf typf; aux xs 
-      in aux l;
+      let h = Hashtbl.create 5 in (* on ne stocke rien au début, au cas ou des structures se référencent les unes les autres *)
       Hashtbl.add tablestructs id h
   | PDfunction _ -> ()
 
-let sizeof = function
+let rec sizeof = function
   | Tint | Tbool | Tstring | Tptr _ -> 8
-  | _ -> (* TODO *) assert false 
+  | Tmany l -> List.fold_left (fun i t -> i + sizeof t) 0 l
+  | _ -> assert false (*TODO structures*)
 
-(* 2. declare functions and type fields *)
+(* 2. declare functions and type fields *) 
 let phase2 = function
-  | PDfunction { pf_name={id; loc}; pf_params=pl; pf_typ=tyl; } ->
-     (* TODO + dire quand on a trouvé main (éditer found_main) *) () 
+  | PDfunction f ->
+    Funcs.add f;
+    Funcs.are_vars_unique f;
+
+     (* TODO + dire quand on a trouvé main (éditer found_main) 
+     + ajouter à chaque variable utilisée le fait qu'elle l'est *) () 
   | PDstruct { ps_name = {id}; ps_fields = fl } ->
-     (* TODO *) () 
+    let h = Hashtbl.find tablestructs id in
+    let rec aux = function 
+      | [] -> ()
+      | (fieldid, fieldtyp)::xs -> (* ici *)
+        if (Hashtbl.mem h fieldid) then 
+          error fieldid.loc ("type"^fieldid.id^"déjà défini dans structure"^id)
+        else 
+          ();
+        if fieldid.id = id then (error fieldid.loc ("structure récursive :"^id^"contien un champ faisant référence à elle-même"););
+       Hashtbl.add h fieldid fieldtyp; aux xs; (* le check est ici *)
+    in aux fl; 
+
+     (* TODO check si la définition est ok (i.e. les références sont définies) *) () 
+
+
 
 (* 3. type check function bodies *)
 let decl = function
