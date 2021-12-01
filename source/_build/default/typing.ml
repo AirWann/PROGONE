@@ -15,6 +15,13 @@ let error loc e = raise (Error (loc, e))
 (* TODO environnement pour les types structure *)
 let tablestructs = Hashtbl.create 5
 (* TODO environnement pour les fonctions *)
+
+(* on ne peut faire cette vérif qu'après la phase 1, 
+sinon les références d'une struct à l'autre sont mauvaises*)
+let rec checktype = function
+  |PTident {id; loc}-> List.mem id ["bool"; "int"] || Hashtbl.mem tablestructs id
+  |PTptr t -> checktype t
+
 module Funcs = struct
   module M = Map.Make(String)
   type t = pfunc M.t
@@ -38,7 +45,25 @@ module Funcs = struct
           Hashtbl.add table (fst p).id ();
           add_table t
         )
-    in add_table f.pf_params;
+    in add_table f.pf_params
+  let veriftypesparam f =
+    let rec auxcheckpparam = function
+    | [] -> ()
+    | x::xs -> 
+      let id = fst x in
+      if checktype (snd x)
+      then auxcheckpparam xs
+      else error id.loc ("paramètre "^id.id^"de la fonction :"^f.pf_name.id^"mal typé")
+    in auxcheckpparam f.pf_params
+
+  let veriftypessortie f =
+    let rec auxchecksortie = function
+    |[] -> ()
+    | x::xs ->
+      if checktype x
+      then auxchecksortie xs
+      else error f.pf_name.loc ("la fonction "^f.pf_name.id^"a un mauvais type de retour")
+    in auxchecksortie f.pf_typ
 end
 
 
@@ -152,7 +177,6 @@ and expr_desc env loc = function (* TODO TODO TODO*)
      (* TODO *) assert false 
 
 let found_main = ref true
-(* TODO fonction checktype Ast.ptyp -> bool *)
 
 
 (* 1. declare structures *)
@@ -162,8 +186,9 @@ let phase1 = function
     if Hashtbl.mem tablestructs id then
       error loc ("Deux structures ont le même nom :" ^ id)
     else
-      let h = Hashtbl.create 5 in (* on ne stocke rien au début, au cas ou des structures se référencent les unes les autres *)
+      let h = Hashtbl.create 5 in 
       Hashtbl.add tablestructs id h
+      (* on ne stocke rien au début, au cas ou des structures se référencent les unes les autres *)
   | PDfunction _ -> ()
 
 let rec sizeof = function
@@ -176,19 +201,22 @@ let phase2 = function
   | PDfunction f ->
     Funcs.add f;
     Funcs.are_vars_unique f;
-
+    Funcs.veriftypesparam f;
+    Funcs.veriftypessortie f;
+    
      (* TODO + dire quand on a trouvé main (éditer found_main) 
      + ajouter à chaque variable utilisée le fait qu'elle l'est *) () 
   | PDstruct { ps_name = {id}; ps_fields = fl } ->
     let h = Hashtbl.find tablestructs id in
     let rec aux = function 
       | [] -> ()
-      | (fieldid, fieldtyp)::xs -> (* ici *)
+      | (fieldid, fieldtyp)::xs ->
         if (Hashtbl.mem h fieldid) then 
           error fieldid.loc ("type :"^fieldid.id^"déjà défini dans structure :"^id)
         else 
           ();
-        if fieldid.id = id then (error fieldid.loc ("structure récursive :"^id^"contien un champ faisant référence à elle-même"););
+        if fieldid.id = id then 
+          (error fieldid.loc ("structure récursive :"^id^"contien un champ faisant référence à elle-même"););
        Hashtbl.add h fieldid fieldtyp; aux xs; (* le check est ici *)
     in aux fl; 
 
