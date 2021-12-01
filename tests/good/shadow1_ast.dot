@@ -1,0 +1,69 @@
+digraph ast {
+node [shape=plaintext];
+root [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >*</b></td></tr></table>>]
+PDfunction_1 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >PDfunction</b></td></tr><tr ><td colspan = '3'>pf_name = { id = "main" }</td></tr><tr ><td port='pf_params'>pf_params</td><td port='pf_typ'>pf_typ</td><td port='pf_body'>pf_body</td></tr></table>>]
+root -> PDfunction_1
+PEblock_2 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEblock</b></td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+PDfunction_1:pf_body -> PEblock_2
+PEvars_3 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEvars</b></td></tr><tr ><td colspan = '1'>idents = [{ id = "n" }]</td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+PEblock_2:pexpr_list -> PEvars_3
+PEconstant_4 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEconstant</b></td></tr><tr ><td port='constant'>constant</td></tr></table>>]
+PEvars_3:pexpr_list -> PEconstant_4
+Cint_5 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >Cint</b></td></tr><tr ><td colspan = '1'>int64 = "0"</td></tr></table>>]
+PEconstant_4:constant -> Cint_5
+PEblock_6 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEblock</b></td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+PEblock_2:pexpr_list -> PEblock_6
+PEvars_7 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEvars</b></td></tr><tr ><td colspan = '1'>idents = [{ id = "n" }]</td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+PEblock_6:pexpr_list -> PEvars_7
+PEconstant_8 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEconstant</b></td></tr><tr ><td port='constant'>constant</td></tr></table>>]
+PEvars_7:pexpr_list -> PEconstant_8
+Cint_9 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >Cint</b></td></tr><tr ><td colspan = '1'>int64 = "1"</td></tr></table>>]
+PEconstant_8:constant -> Cint_9
+PEif_10 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >PEif</b></td></tr><tr ><td port='pexpr_cond'>pexpr_cond</td><td port='pexpr_if'>pexpr_if</td><td port='pexpr_else'>pexpr_else</td></tr></table>>]
+PEblock_6:pexpr_list -> PEif_10
+PEbinop_11 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >PEbinop</b></td></tr><tr ><td colspan = '2'>binop = "=="</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td></tr></table>>]
+PEif_10:pexpr_cond -> PEbinop_11
+PEident_12 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEident</b></td></tr><tr ><td colspan = '1'>ident = { id = "n" }</td></tr></table>>]
+PEbinop_11:pexpr_left -> PEident_12
+PEconstant_13 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEconstant</b></td></tr><tr ><td port='constant'>constant</td></tr></table>>]
+PEbinop_11:pexpr_right -> PEconstant_13
+Cint_14 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >Cint</b></td></tr><tr ><td colspan = '1'>int64 = "1"</td></tr></table>>]
+PEconstant_13:constant -> Cint_14
+PEblock_15 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEblock</b></td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+PEif_10:pexpr_if -> PEblock_15
+PEcall_16 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEcall</b></td></tr><tr ><td colspan = '1'>ident = { id = "fmt.Print" }</td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+PEblock_15:pexpr_list -> PEcall_16
+PEconstant_17 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEconstant</b></td></tr><tr ><td port='constant'>constant</td></tr></table>>]
+PEcall_16:pexpr_list -> PEconstant_17
+Cstring_18 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >Cstring</b></td></tr><tr ><td colspan = '1'>string = "a"</td></tr></table>>]
+PEconstant_17:constant -> Cstring_18
+PEskip_19 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEskip</b></td></tr></table>>]
+PEif_10:pexpr_else -> PEskip_19
+PEif_20 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >PEif</b></td></tr><tr ><td port='pexpr_cond'>pexpr_cond</td><td port='pexpr_if'>pexpr_if</td><td port='pexpr_else'>pexpr_else</td></tr></table>>]
+PEblock_2:pexpr_list -> PEif_20
+PEbinop_21 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '2'><b >PEbinop</b></td></tr><tr ><td colspan = '2'>binop = "=="</td></tr><tr ><td port='pexpr_left'>pexpr_left</td><td port='pexpr_right'>pexpr_right</td></tr></table>>]
+PEif_20:pexpr_cond -> PEbinop_21
+PEident_22 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEident</b></td></tr><tr ><td colspan = '1'>ident = { id = "n" }</td></tr></table>>]
+PEbinop_21:pexpr_left -> PEident_22
+PEconstant_23 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEconstant</b></td></tr><tr ><td port='constant'>constant</td></tr></table>>]
+PEbinop_21:pexpr_right -> PEconstant_23
+Cint_24 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >Cint</b></td></tr><tr ><td colspan = '1'>int64 = "0"</td></tr></table>>]
+PEconstant_23:constant -> Cint_24
+PEblock_25 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEblock</b></td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+PEif_20:pexpr_if -> PEblock_25
+PEcall_26 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEcall</b></td></tr><tr ><td colspan = '1'>ident = { id = "fmt.Print" }</td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+PEblock_25:pexpr_list -> PEcall_26
+PEconstant_27 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEconstant</b></td></tr><tr ><td port='constant'>constant</td></tr></table>>]
+PEcall_26:pexpr_list -> PEconstant_27
+Cstring_28 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >Cstring</b></td></tr><tr ><td colspan = '1'>string = "b"</td></tr></table>>]
+PEconstant_27:constant -> Cstring_28
+PEskip_29 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEskip</b></td></tr></table>>]
+PEif_20:pexpr_else -> PEskip_29
+PEcall_30 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEcall</b></td></tr><tr ><td colspan = '1'>ident = { id = "fmt.Print" }</td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+PEblock_2:pexpr_list -> PEcall_30
+PEconstant_31 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEconstant</b></td></tr><tr ><td port='constant'>constant</td></tr></table>>]
+PEcall_30:pexpr_list -> PEconstant_31
+Cstring_32 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >Cstring</b></td></tr><tr ><td colspan = '1'>string = "
+"</td></tr></table>>]
+PEconstant_31:constant -> Cstring_32
+}

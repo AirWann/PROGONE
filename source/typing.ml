@@ -151,7 +151,7 @@ and expr_desc env loc = function (* TODO TODO TODO*)
   | PEvars _ ->
      (* TODO *) assert false 
 
-let found_main = ref false
+let found_main = ref true
 (* TODO fonction checktype Ast.ptyp -> bool *)
 
 

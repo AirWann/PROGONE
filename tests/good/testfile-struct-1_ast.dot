@@ -1,0 +1,22 @@
+digraph ast {
+node [shape=plaintext];
+root [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >*</b></td></tr></table>>]
+PDstruct_1 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PDstruct</b></td></tr><tr ><td colspan = '1'>ps_name = { id = "A" }</td></tr><tr ><td port='ps_fields'>ps_fields</td></tr></table>>]
+root -> PDstruct_1
+pfield_2 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >pfield</b></td></tr><tr ><td colspan = '1'>ident = { id = "b" }</td></tr><tr ><td port='typ'>typ</td></tr></table>>]
+PDstruct_1:ps_fields -> pfield_2
+PTptr_3 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PTptr</b></td></tr><tr ><td port='ptyp'>ptyp</td></tr></table>>]
+pfield_2:typ -> PTptr_3
+PTident_4 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PTident</b></td></tr><tr ><td colspan = '1'>ident = { id = "B" }</td></tr></table>>]
+PTptr_3:ptyp -> PTident_4
+PDstruct_5 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PDstruct</b></td></tr><tr ><td colspan = '1'>ps_name = { id = "B" }</td></tr><tr ><td port='ps_fields'>ps_fields</td></tr></table>>]
+root -> PDstruct_5
+pfield_6 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >pfield</b></td></tr><tr ><td colspan = '1'>ident = { id = "a" }</td></tr><tr ><td port='typ'>typ</td></tr></table>>]
+PDstruct_5:ps_fields -> pfield_6
+PTident_7 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PTident</b></td></tr><tr ><td colspan = '1'>ident = { id = "A" }</td></tr></table>>]
+pfield_6:typ -> PTident_7
+PDfunction_8 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '3'><b >PDfunction</b></td></tr><tr ><td colspan = '3'>pf_name = { id = "main" }</td></tr><tr ><td port='pf_params'>pf_params</td><td port='pf_typ'>pf_typ</td><td port='pf_body'>pf_body</td></tr></table>>]
+root -> PDfunction_8
+PEblock_9 [label=<<table border='0' cellborder='1' cellspacing='0' cellpadding='4'><tr ><td colspan = '1'><b >PEblock</b></td></tr><tr ><td port='pexpr_list'>pexpr_list</td></tr></table>>]
+PDfunction_8:pf_body -> PEblock_9
+}

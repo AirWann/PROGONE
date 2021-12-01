@@ -151,14 +151,16 @@ and expr_desc env loc = function (* TODO TODO TODO*)
   | PEvars _ ->
      (* TODO *) assert false 
 
-let found_main = ref false
+let found_main = ref true
+(* TODO fonction checktype Ast.ptyp -> bool *)
+
 
 (* 1. declare structures *)
 
 let phase1 = function
   | PDstruct { ps_name = { id = id; loc = loc }; ps_fields = l} -> (* TODO *)
     if Hashtbl.mem tablestructs id then
-      error loc ("Deux structures ont le même nom" ^ id)
+      error loc ("Deux structures ont le même nom :" ^ id)
     else
       let h = Hashtbl.create 5 in (* on ne stocke rien au début, au cas ou des structures se référencent les unes les autres *)
       Hashtbl.add tablestructs id h
@@ -183,7 +185,7 @@ let phase2 = function
       | [] -> ()
       | (fieldid, fieldtyp)::xs -> (* ici *)
         if (Hashtbl.mem h fieldid) then 
-          error fieldid.loc ("type"^fieldid.id^"déjà défini dans structure"^id)
+          error fieldid.loc ("type :"^fieldid.id^"déjà défini dans structure :"^id)
         else 
           ();
         if fieldid.id = id then (error fieldid.loc ("structure récursive :"^id^"contien un champ faisant référence à elle-même"););
