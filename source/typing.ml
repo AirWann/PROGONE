@@ -73,8 +73,16 @@ let rec type_type = function
   | PTident { id = "int" } -> Tint
   | PTident { id = "bool" } -> Tbool
   | PTident { id = "string" } -> Tstring
+  | PTident id -> 
+    (
+    try
+      let s = Hashtbl.find tablestructs id.id in
+      Tstruct s
+      
+    with 
+    |Not_found -> error id.loc ("Déclaration de variable de type "^id.id^" inconnu")
+    )
   | PTptr ty -> Tptr (type_type ty)
-  | _ -> error dummy_loc ("unknown struct ") (* TODO type structure *)
 let rec eqlist l1 l2 cmp = match l1,l2 with
   |[], [] -> true
   |[], _ -> false
@@ -177,7 +185,7 @@ and expr_desc env loc = function (* TODO TODO TODO*)
   | PEvars _ ->
      (* TODO *) assert false 
 
-let found_main = ref true
+let found_main = ref false
 
 
 (* 1. declare structures *)
@@ -188,7 +196,7 @@ let phase1 = function
       error loc ("Deux structures ont le même nom : " ^ id)
     else
       let h = Hashtbl.create 5 in 
-      Hashtbl.add tablestructs id h
+      Hashtbl.add tablestructs id {s_name = id; s_fields =h}
       (* on ne stocke rien au début, 
       au cas ou des structures se référencent les unes les autres *)
   | PDfunction _ -> ()
@@ -203,8 +211,6 @@ let checkmain f =
   if not(f.pf_params = [] && f.pf_typ = []) 
   then error f.pf_name.loc "Fonction main mal typée !"
   else found_main := true
-
-
 
 (* 2. declare functions and type fields *) 
 let phase2 = function
@@ -225,14 +231,15 @@ let phase2 = function
           (if not(checktype fieldtyp) then
             error fieldid.loc ("Dans la structure "^id^" le champ "^fieldid.id^" ne fait référence à aucun type connu")
           );
-          (if (Hashtbl.mem h fieldid.id) then 
+          (if (Hashtbl.mem h.s_fields fieldid.id) then 
             error fieldid.loc ("type "^fieldid.id^" déjà défini dans structure "^id)
           );
           (if fieldid.id = id then 
             error fieldid.loc ("structure récursive "^id^" contient un champ faisant référence à elle-même")
           );
         );     
-        Hashtbl.add h fieldid.id fieldtyp; 
+
+        Hashtbl.add h.s_fields fieldid.id {f_name = fieldid.id ; f_typ = type_type fieldtyp; f_ofs = 0};
         aux xs
     in aux fl
 
@@ -241,12 +248,11 @@ let phase2 = function
 (* 3. type check function bodies *)
 let decl = function
   | PDfunction { pf_name={id; loc}; pf_body = e; pf_typ=tyl } ->
-    (* TODO check name and type *) 
-    let f = { fn_name = id; fn_params = []; fn_typ = []} in
+    let f = { fn_name = id; fn_params = []; fn_typ = List.map type_type tyl} in
     let e, rt = expr Env.empty e in
     TDfunction (f, e)
   | PDstruct {ps_name={id}} ->
-    (* TODO *) let s = { s_name = id; s_fields = Hashtbl.create 5 } in
+     let s = Hashtbl.find tablestructs id in
      TDstruct s
 
 let file ~debug:b (imp, dl) =
