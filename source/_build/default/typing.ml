@@ -131,11 +131,18 @@ end
 let tvoid = Tmany []
 let make d ty = { expr_desc = d; expr_typ = ty }
 let stmt d = make d tvoid
+let rec islvalue = function
+  | PEident _ -> true
+  | PEdot (e,x) when islvalue e.pexpr_desc -> true
+  | PEunop (Ustar, e) when e.pexpr_desc != PEnil -> true
+  | _ -> false
+
 
 let rec expr env e =
  let e, ty, rt = expr_desc env e.pexpr_loc e.pexpr_desc in
   { expr_desc = e; expr_typ = ty }, rt
-
+  and exprx env x = let ex, _ = expr env x in ex
+  and rtx env x = let _, rx = expr env x in rx
 and expr_desc env loc = function (* TODO TODO TODO*)
   | PEskip ->
      TEskip, tvoid, false
@@ -147,11 +154,48 @@ and expr_desc env loc = function (* TODO TODO TODO*)
      |Cstring s -> TEconstant c, Tstring, false
      )
   | PEbinop (op, e1, e2) ->
-    (* TODO nouveau pattern matching dans lequel on check les types *) assert false
-  | PEunop (Uamp, e1) ->
-    (* TODO *) assert false
-  | PEunop (Uneg | Unot | Ustar as op, e1) ->
-    (* TODO *) assert false
+    (
+      let d1, ty1, rt1 = expr_desc env loc e1.pexpr_desc in
+      let d2, ty2, rt2 = expr_desc env loc e2.pexpr_desc in 
+      match op with
+      | Badd | Bsub | Bmul | Bdiv | Bmod  -> 
+        if (ty1 = Tint && ty2 = Tint)
+          then TEbinop (op, make d1 ty1, make d2 ty2), Tint, false
+          else error loc ("type int attendu pour cet opérateur")
+      | Beq | Bne ->
+        if (ty1 = ty2)
+          then TEbinop (op, make d1 ty1, make d2 ty2), Tbool, false
+          else error loc ("types égaux attendus pour opérateur d'égalité")
+      | Blt | Ble | Bgt | Bge ->
+        if (ty1 = Tint && ty2 = Tint)
+          then TEbinop (op, make d1 ty1, make d2 ty2), Tbool, false
+          else error loc ("type int attendu pour cet opérateur")
+      | Band | Bor ->
+        if (ty1 = Tbool && ty2 = Tbool)
+          then TEbinop (op, make d1 ty1, make d2 ty2), Tbool, false
+          else error loc ("type bool attendu pour cet opérateur")
+    )
+  | PEunop (Uamp, e) ->
+    if islvalue e.pexpr_desc 
+      then let ex, rx = expr env e in TEunop (Uamp, ex), Tptr (ex.expr_typ), false
+      else error loc ("l-value attendue pour &")
+  | PEunop (Uneg, e1) ->
+    let ex, rx = expr env e1 in
+    if ex.expr_typ = Tint 
+      then TEunop (Uneg, ex), Tint, false
+      else error loc ("type int attendu pour négation")
+  | PEunop (Unot, e1) ->
+    let ex, rx = expr env e1 in
+    if ex.expr_typ = Tbool 
+      then TEunop (Unot, ex), Tbool, false
+      else error loc ("type bool attendu pour non logique")
+  | PEunop (Ustar, e1) ->
+     let ex, rx = expr env e1 in
+     (
+      match ex.expr_typ with
+        |Tptr t -> TEunop (Ustar, ex), t, false
+        | _ -> error loc ("pointeur non égal à nil attendu pour *")
+     )
   | PEcall ({id = "fmt.Print"}, el) ->
     (* TODO *) TEprint [], tvoid, false
   | PEcall ({id="new"}, [{pexpr_desc=PEident {id}}]) ->
@@ -164,11 +208,24 @@ and expr_desc env loc = function (* TODO TODO TODO*)
   | PEcall (id, el) ->
      (* TODO *) assert false
   | PEfor (e, b) ->
-     (* TODO *) assert false
+     let exb, rtb = expr env b in
+     (if rtb then error loc ("test booléen renvoie qqch"););
+     if exb.expr_typ = Tbool 
+        then
+          let ex, rx = expr env e in
+          TEfor (ex, exb), tvoid, rx
+        else error loc ("type bool attendu dans test de for")
   | PEif (e1, e2, e3) ->
-     (* TODO *) assert false
+    let ex, rx = expr env e1 in
+    (if rx then error loc ("test booléen retourne qqch"););
+    if ex.expr_typ = Tbool 
+      then 
+        let ex2, rt2 = expr env e2 in 
+        let ex3, rt3 = expr env e3 in
+        TEif (ex, ex2,ex3), tvoid, rt2 && rt3
+      else error loc ("type bool attendu dans test de if")
   | PEnil ->
-     (* TODO *) assert false ;
+     TEnil, tvoid, false
   | PEident {id=id}->
      (*TODO*)(try let v = Env.find id env in TEident v, v.v_typ, false
       with Not_found -> error loc ("unbound variable " ^ id))
@@ -179,9 +236,14 @@ and expr_desc env loc = function (* TODO TODO TODO*)
   | PEreturn el ->
      (* TODO *) TEreturn [], tvoid, true
   | PEblock el ->
-     (* TODO *) TEblock [], tvoid, false
+    let el_typee = List.map (exprx env) el in
+    let rt = List.exists (rtx env) el in
+     TEblock el_typee, tvoid, rt
   | PEincdec (e, op) ->
-     (* TODO *) assert false
+     let dx, tyx, rtx = expr_desc env loc e.pexpr_desc in
+     if tyx = Tint
+      then TEincdec (make dx tyx, op), Tint, false
+      else error loc ("type int attendu pour ++/--")
   | PEvars _ ->
      (* TODO *) assert false 
 
@@ -268,7 +330,7 @@ let paramlisttovarlist plist =
 let decl = function
   | PDfunction { pf_name={id; loc}; pf_body = e; pf_typ=typl ; pf_params = params} ->
     let typesortie = List.map type_type typl in (* la liste des types de sortie passe de Ast.ptyp à Tast.typ *)
-    let listevars,environnement = paramlisttovarlist params in (* on ajoute tous les paramètres d'entrée à l'environnement, QUI EST CREE ICI *)
+    let listevars,environnement = paramlisttovarlist params in (* on ajoute tous les paramètres d'entrée à l'environnement, créé à la volée par cette fonction *)
     let f = { fn_name = id; fn_params = listevars; fn_typ = typesortie} in (* on écrit notre Tast.function *)
     let e, rt = expr environnement e in (* on vérifie le corps *)
     TDfunction (f, e)

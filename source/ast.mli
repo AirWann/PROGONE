@@ -9,8 +9,9 @@ type unop =
   | Uneg | Unot | Uamp | Ustar
 
 type binop =
-  | Badd | Bsub | Bmul | Bdiv | Bmod
-  | Beq | Bne | Blt | Ble | Bgt | Bge
+  | Badd | Bsub | Bmul | Bdiv | Bmod (* ints -> int*)
+  | Beq | Bne (* tous *)
+  | Blt | Ble | Bgt | Bge (* ints -> bool *)
   | Band | Bor (* && || *)
 
 type constant =
@@ -19,7 +20,7 @@ type constant =
   | Cstring of string
 
 type ptyp =
-  | PTident of ident (* bool, int, struct id *)
+  | PTident of ident (* bool, int, string, struct id *)
   | PTptr   of ptyp
 (*commentaire *)
 type incdec = Inc | Dec (* ++ -- *)
