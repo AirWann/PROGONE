@@ -204,7 +204,10 @@ let phase1 = function
 let rec sizeof = function
   | Tint | Tbool | Tstring | Tptr _ -> 8
   | Tmany l -> List.fold_left (fun i t -> i + sizeof t) 0 l
-  | _ -> assert false (*TODO structures*)
+  | Tstruct s -> 
+    let sum = ref 0 in
+    Hashtbl.iter (fun a b -> sum := !sum + sizeof (b.f_typ)) s.s_fields;
+    !sum
 
 
 let checkmain f =
@@ -223,6 +226,7 @@ let phase2 = function
       then checkmain f
     );
   | PDstruct { ps_name = {id}; ps_fields = fl } ->
+    let offset = ref 0 in
     let h = Hashtbl.find tablestructs id in
     let rec aux = function 
       | [] -> ()
@@ -238,22 +242,39 @@ let phase2 = function
             error fieldid.loc ("structure récursive "^id^" contient un champ faisant référence à elle-même")
           );
         );     
-
-        Hashtbl.add h.s_fields fieldid.id {f_name = fieldid.id ; f_typ = type_type fieldtyp; f_ofs = 0};
+        let f = {f_name = fieldid.id ; f_typ = type_type fieldtyp; f_ofs = !offset} in
+        offset := !offset + sizeof f.f_typ;
+        Hashtbl.add h.s_fields fieldid.id f;
         aux xs
     in aux fl
 
 
 
+(* fonction clé dans la phase 3. 
+On lui donne une liste de Ast.pparam et elle renvoie une liste de Tast.vars et un environnement les contenant *)
+let paramlisttovarlist plist = 
+  let rec aux = function
+    | [] -> ([],Env.empty)
+    | p::xs -> 
+      let (vlist,e) = aux xs in 
+      let (id, typ) = p in
+      let (nvenv, v) = Env.var id.id id.loc (type_type typ) e in
+      (v::vlist, nvenv)
+    in aux plist
+
+
+
 (* 3. type check function bodies *)
 let decl = function
-  | PDfunction { pf_name={id; loc}; pf_body = e; pf_typ=tyl } ->
-    (* TODO check name and type *) 
-    let f = { fn_name = id; fn_params = []; fn_typ = []} in
-    let e, rt = expr Env.empty e in
+  | PDfunction { pf_name={id; loc}; pf_body = e; pf_typ=typl ; pf_params = params} ->
+    let typesortie = List.map type_type typl in (* la liste des types de sortie passe de Ast.ptyp à Tast.typ *)
+    let listevars,environnement = paramlisttovarlist params in (* on ajoute tous les paramètres d'entrée à l'environnement, QUI EST CREE ICI *)
+    let f = { fn_name = id; fn_params = listevars; fn_typ = typesortie} in (* on écrit notre Tast.function *)
+    let e, rt = expr environnement e in (* on vérifie le corps *)
     TDfunction (f, e)
+
   | PDstruct {ps_name={id}} ->
-    (* TODO *) let s = { s_name = id; s_fields = Hashtbl.create 5 } in
+     let s = Hashtbl.find tablestructs id in
      TDstruct s
 
 let file ~debug:b (imp, dl) =
