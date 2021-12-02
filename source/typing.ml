@@ -32,7 +32,7 @@ module Funcs = struct
   let is_def f = M.mem f.pf_name.id !all_funcs
   let add f = 
     if is_def f then 
-      error f.pf_name.loc ("Deux structures ont le même nom : " ^f.pf_name.id)
+      error f.pf_name.loc ("Deux fonctions ont le même nom : " ^f.pf_name.id)
   else
       all_funcs := M.add f.pf_name.id f !all_funcs
   let are_vars_unique f = 
@@ -40,10 +40,11 @@ module Funcs = struct
     let rec add_table = function
       |[] -> ()
       |p::t -> (* pour tout pparam p, on vérifie que son identifiant n'est pas déjà pris *)
-        if Hashtbl.mem table (fst p).id then
-          error (fst p).loc ("variable "^(fst p).id^" déjà définie dans : "^f.pf_name.id)
+        let idparam = fst p in
+        if Hashtbl.mem table idparam.id then
+          error idparam.loc ("dans la fonction "^f.pf_name.id^" deux arguments ont le nom "^idparam.id)
         else (
-          Hashtbl.add table (fst p).id ();
+          Hashtbl.add table idparam.id ();
           add_table t
         )
     in add_table f.pf_params
@@ -54,7 +55,7 @@ module Funcs = struct
       let id = fst x in
       if checktype (snd x)
       then auxcheckpparam xs
-      else error id.loc ("paramètre "^id.id^" de la fonction : "^f.pf_name.id^" mal typé")
+      else error id.loc ("le paramètre "^id.id^" de la fonction "^f.pf_name.id^" est de type inconnu")
     in auxcheckpparam f.pf_params
 
   let veriftypessortie f =
@@ -63,7 +64,7 @@ module Funcs = struct
     | x::xs ->
       if checktype x
       then auxchecksortie xs
-      else error f.pf_name.loc ("la fonction : "^f.pf_name.id^" a un type de retour inconnu")
+      else error f.pf_name.loc ("la fonction "^f.pf_name.id^" a un type de retour inconnu")
     in auxchecksortie f.pf_typ
 end
 
@@ -104,13 +105,12 @@ module Env = struct
   let empty = M.empty
   let find = M.find
   let add env v = M.add v.v_name v env
-
   let all_vars = ref []
   let check_unused () =
     let check v =
-      if v.v_name <> "_" && (* TODO used *) true then error v.v_loc ("unused variable : "^v.v_name) in
+      if v.v_name <> "_" && (* TODO used *) true then
+       error v.v_loc ("unused variable : "^v.v_name) in
     List.iter check !all_vars
-
 
   let var x loc ?used ty env =
     let v = new_var x loc ?used ty in
@@ -189,7 +189,8 @@ let phase1 = function
     else
       let h = Hashtbl.create 5 in 
       Hashtbl.add tablestructs id h
-      (* on ne stocke rien au début, au cas ou des structures se référencent les unes les autres *)
+      (* on ne stocke rien au début, 
+      au cas ou des structures se référencent les unes les autres *)
   | PDfunction _ -> ()
 
 let rec sizeof = function
@@ -202,6 +203,9 @@ let checkmain f =
   if not(f.pf_params = [] && f.pf_typ = []) 
   then error f.pf_name.loc "Fonction main mal typée !"
   else found_main := true
+
+
+
 (* 2. declare functions and type fields *) 
 let phase2 = function
   | PDfunction f ->
@@ -219,16 +223,16 @@ let phase2 = function
       | (fieldid, fieldtyp)::xs ->
         (
           (if not(checktype fieldtyp) then
-            error fieldid.loc ("Dans la structure : "^id^" le champ "^fieldid.id^" ne fait référence à aucun type connu")
+            error fieldid.loc ("Dans la structure "^id^" le champ "^fieldid.id^" ne fait référence à aucun type connu")
           );
-          (if (Hashtbl.mem h fieldid) then 
-            error fieldid.loc ("type : "^fieldid.id^" déjà défini dans structure : "^id)
+          (if (Hashtbl.mem h fieldid.id) then 
+            error fieldid.loc ("type "^fieldid.id^" déjà défini dans structure "^id)
           );
           (if fieldid.id = id then 
-            error fieldid.loc ("structure récursive : "^id^" contient un champ faisant référence à elle-même")
+            error fieldid.loc ("structure récursive "^id^" contient un champ faisant référence à elle-même")
           );
         );     
-        Hashtbl.add h fieldid fieldtyp; 
+        Hashtbl.add h fieldid.id fieldtyp; 
         aux xs
     in aux fl
 
