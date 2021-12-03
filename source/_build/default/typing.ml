@@ -21,7 +21,12 @@ sinon les références d'une struct à l'autre sont jugées mauvaises*)
 let rec checktype = function
   |PTident {id; loc}-> List.mem id ["bool"; "int"; "string"] || Hashtbl.mem tablestructs id
   |PTptr t -> checktype t
-
+let listtotype = function 
+  | [x] -> x
+  | _ as a -> Tmany a
+let typetolist = function
+  |Tmany a -> a
+  | _ as x -> [x]
   (* environnement pour les fonctions *)
 module Funcs = struct
   module M = Map.Make(String)
@@ -78,25 +83,20 @@ let rec type_type = function
     try
       let s = Hashtbl.find tablestructs id.id in
       Tstruct s
-      
     with 
     |Not_found -> error id.loc ("Déclaration de variable de type "^id.id^" inconnu")
     )
   | PTptr ty -> Tptr (type_type ty)
-let rec eqlist l1 l2 cmp = match l1,l2 with
-  |[], [] -> true
-  |[], _ -> false
-  |_, [] -> false
-  | x::q1 , y::q2 -> (cmp x y && eqlist q1 q2 cmp)  
+
 let rec eq_type ty1 ty2 = match ty1, ty2 with
   | Tint, Tint | Tbool, Tbool | Tstring, Tstring -> true
-  | Tstruct s1, Tstruct s2 -> s1 == s2
+  | Tstruct s1, Tstruct s2 -> s1.s_name = s2.s_name
   | Tptr ty1, Tptr ty2 -> eq_type ty1 ty2
-  | Tmany l1, Tmany l2 -> eqlist l1 l2 eq_type
+  | Tmany l1, Tmany l2 -> List.filter (fun x -> (List.mem x l2)) l1 = [] (* merci Arthur pour l'astuce *)
   | _ -> false
     (* TODO autres types *)
 
-let fmt_used = ref true
+let fmt_used = ref false
 let fmt_imported = ref false
 
 let evar v = { expr_desc = TEident v; expr_typ = v.v_typ }
@@ -116,7 +116,7 @@ module Env = struct
   let all_vars = ref []
   let check_unused () =
     let check v =
-      if v.v_name <> "_" && (* TODO used *) true then
+      if v.v_name <> "_" && not v.v_used then
        error v.v_loc ("unused variable : "^v.v_name) in
     List.iter check !all_vars
 
@@ -134,16 +134,16 @@ let stmt d = make d tvoid
 let rec islvalue = function
   | PEident _ -> true
   | PEdot (e,x) when islvalue e.pexpr_desc -> true
-  | PEunop (Ustar, e) when e.pexpr_desc != PEnil -> true
+  | PEunop (Ustar, e) when e.pexpr_desc <> PEnil -> true
   | _ -> false
 
-
+let typederetour = ref tvoid
 let rec expr env e =
  let e, ty, rt = expr_desc env e.pexpr_loc e.pexpr_desc in
   { expr_desc = e; expr_typ = ty }, rt
   and exprx env x = let ex, _ = expr env x in ex
   and rtx env x = let _, rx = expr env x in rx
-and expr_desc env loc = function (* TODO TODO TODO*)
+and expr_desc env loc = function 
   | PEskip ->
      TEskip, tvoid, false
   | PEconstant c ->
@@ -197,19 +197,36 @@ and expr_desc env loc = function (* TODO TODO TODO*)
         | _ -> error loc ("pointeur non égal à nil attendu pour *")
      )
   | PEcall ({id = "fmt.Print"}, el) ->
-    (* TODO *) TEprint [], tvoid, false
+    (if not !fmt_imported then error loc ("Print demandé sans import de fmt"););
+    fmt_used := true;
+    let toprint = List.map (exprx env) el in
+     TEprint toprint, tvoid, false
   | PEcall ({id="new"}, [{pexpr_desc=PEident {id}}]) ->
      let ty = match id with
        | "int" -> Tint | "bool" -> Tbool | "string" -> Tstring
-       | _ -> (* TODO *) error loc ("no such type " ^ id) in
+       | _ -> 
+        if Hashtbl.mem tablestructs id 
+          then type_type (PTident {id ; loc})
+          else error loc ("type "^id^" inconnu ")
+      in
      TEnew ty, Tptr ty, false
   | PEcall ({id="new"}, _) ->
-     error loc "new expects a type"
+     error loc "demande de new sans type donné"
   | PEcall (id, el) ->
-     (* TODO *) assert false
+     (
+       try
+      let pf = Funcs.find id.id in
+      let el_typee = List.map (exprx env) el in
+      let f = {fn_name = pf.pf_name.id ; fn_typ = List.map type_type pf.pf_typ ;
+                fn_params = List.map (fun (id,typ) -> new_var id.id id.loc (type_type typ)) pf.pf_params} in
+      let typ = listtotype f.fn_typ in
+      TEcall(f,el_typee), typ , false
+     with
+     |Not_found -> error loc ("appel de fonction "^id.id^" inconnue")
+     )
   | PEfor (e, b) ->
      let exb, rtb = expr env b in
-     (if rtb then error loc ("test booléen renvoie qqch"););
+     (if rtb then error loc ("test booléen retourne qqch"););
      if exb.expr_typ = Tbool 
         then
           let ex, rx = expr env e in
@@ -227,14 +244,44 @@ and expr_desc env loc = function (* TODO TODO TODO*)
   | PEnil ->
      TEnil, tvoid, false
   | PEident {id=id}->
-     (*TODO*)(try let v = Env.find id env in TEident v, v.v_typ, false
-      with Not_found -> error loc ("unbound variable " ^ id))
+    (
+     try 
+      let v = Env.find id env in 
+        v.v_used <- true;
+        TEident v, v.v_typ, false
+     with Not_found -> error loc ("unbound variable " ^ id)
+    )
   | PEdot (e, id) ->
-     (* TODO *) assert false
+     (
+      let newe = exprx env e in
+       match newe.expr_typ with
+        |Tstruct a |Tptr (Tstruct a) -> 
+          (
+            try
+            let s = Hashtbl.find tablestructs a.s_name in
+            if Hashtbl.mem s.s_fields id.id 
+              then let field = Hashtbl.find s.s_fields id.id in
+                    TEdot(newe,field),field.f_typ,false
+              else error loc ("la structure"^s.s_name^"n'a pas de champ"^id.id)
+            with 
+            |Not_found -> error loc ("structure inconnue")
+          )
+        | _ -> error loc ("dot sur qqch qui n'est pas une structure")
+     )
+
   | PEassign (lvl, el) ->
-     (* TODO *) TEassign ([], []), tvoid, false 
+      if List.for_all (fun x -> islvalue x.pexpr_desc) lvl
+        then
+          let newlvl = List.map (exprx env) lvl in
+          let newel = List.map (exprx env) el in
+          TEassign (newlvl, newel), tvoid, false 
+        else error loc "l-value attendue pour assignation"
   | PEreturn el ->
-     (* TODO *) TEreturn [], tvoid, true
+    let el_typee = List.map (exprx env) el in
+    let retour = listtotype (List.map (fun x -> x.expr_typ) el_typee) in
+    if retour = !typederetour 
+      then TEreturn el_typee, tvoid, true
+      else error loc "mauvais type de retour"
   | PEblock el ->
     let el_typee = List.map (exprx env) el in
     let rt = List.exists (rtx env) el in
@@ -329,10 +376,13 @@ let paramlisttovarlist plist =
 (* 3. type check function bodies *)
 let decl = function
   | PDfunction { pf_name={id; loc}; pf_body = e; pf_typ=typl ; pf_params = params} ->
-    let typesortie = List.map type_type typl in (* la liste des types de sortie passe de Ast.ptyp à Tast.typ *)
+    let returntype = List.map type_type typl in
+    typederetour := listtotype returntype; (* on le garde en mémoire pendant le parcours *)
+    let typesortie = List.map type_type typl in (* la liste des types de sortie passe de Ast.ptyp list à Tast.typ list *)
     let listevars,environnement = paramlisttovarlist params in (* on ajoute tous les paramètres d'entrée à l'environnement, créé à la volée par cette fonction *)
     let f = { fn_name = id; fn_params = listevars; fn_typ = typesortie} in (* on écrit notre Tast.function *)
     let e, rt = expr environnement e in (* on vérifie le corps *)
+    (if not rt && !typederetour <> tvoid then error loc ("manque return dans fonction"^id));
     TDfunction (f, e)
 
   | PDstruct {ps_name={id}} ->
@@ -341,12 +391,11 @@ let decl = function
 
 let file ~debug:b (imp, dl) =
   debug := b;
-  (* fmt_imported := imp; *)
-
+  fmt_imported := imp;
   List.iter phase1 dl;
   List.iter phase2 dl;
   if not !found_main then error dummy_loc "missing method main";
   let dl = List.map decl dl in
-  Env.check_unused (); (* TODO variables non utilisees *)
+  Env.check_unused ();
   if imp && not !fmt_used then error dummy_loc "fmt imported but not used";
   dl 
