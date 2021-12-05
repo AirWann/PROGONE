@@ -88,14 +88,21 @@ let rec type_type = function
     )
   | PTptr ty -> Tptr (type_type ty)
 
+let rec eqlist cmp l1 l2 = match l1,l2 with
+|[],[] -> true
+|[],_ -> false
+|_,[] -> false
+|x::xs, y::ys -> cmp x y && eqlist cmp xs ys
 let rec eq_type ty1 ty2 = match ty1, ty2 with
   | Tint, Tint | Tbool, Tbool | Tstring, Tstring -> true
   | Tstruct s1, Tstruct s2 -> s1.s_name = s2.s_name
   | Tptr ty1, Tptr ty2 -> eq_type ty1 ty2
-  | Tmany l1, Tmany l2 -> List.filter (fun x -> (List.mem x l2)) l1 = [] (* merci Arthur pour l'astuce *)
+  | Tmany l1, Tmany l2 -> l1 = l2 
   | _ -> false
     (* TODO autres types *)
-
+let eq_typeLR  tyL tyR = match tyL with
+|Tptr t -> eq_type tyL tyR || eq_type t tyR
+|_ -> eq_type tyL tyR
 let fmt_used = ref false
 let fmt_imported = ref false
 
@@ -128,6 +135,7 @@ module Env = struct
   (* TODO type () et vecteur de types *)
 end
 
+let envactuel = ref Env.empty
 let tvoid = Tmany []
 let make d ty = { expr_desc = d; expr_typ = ty }
 let stmt d = make d tvoid
@@ -137,6 +145,14 @@ let rec islvalue = function
   | PEunop (Ustar, e) when e.pexpr_desc <> PEnil -> true
   | _ -> false
 
+let validassign lvl el loc =
+  let listetypesR1 = List.map (fun x -> x.expr_typ) el in
+  let listetypesR2 = List.map typetolist listetypesR1 in
+  let listetypeR = List.flatten listetypesR2 in
+  let listetypesL1 = List.map (fun x -> x.expr_typ) el in
+  let listetypesL2 = List.map typetolist listetypesL1 in
+  let listetypeL = List.flatten listetypesL2 in
+  if not (eqlist eq_typeLR listetypeL listetypeR) then error loc ("problème de types lors de l'assignation")
 let typederetour = ref tvoid
 let rec expr env e =
  let e, ty, rt = expr_desc env e.pexpr_loc e.pexpr_desc in
@@ -226,7 +242,7 @@ and expr_desc env loc = function
      )
   | PEfor (e, b) ->
      let exb, rtb = expr env b in
-     (if rtb then error loc ("test booléen retourne qqch"););
+     (if rtb then error loc ("le test booléen retourne qqch"););
      if exb.expr_typ = Tbool 
         then
           let ex, rx = expr env e in
@@ -234,7 +250,7 @@ and expr_desc env loc = function
         else error loc ("type bool attendu dans test de for")
   | PEif (e1, e2, e3) ->
     let ex, rx = expr env e1 in
-    (if rx then error loc ("test booléen retourne qqch"););
+    (if rx then error loc ("le test booléen retourne qqch"););
     if ex.expr_typ = Tbool 
       then 
         let ex2, rt2 = expr env e2 in 
@@ -246,7 +262,7 @@ and expr_desc env loc = function
   | PEident {id=id}->
     (
      try 
-      let v = Env.find id env in 
+      let v = Env.find id !envactuel in 
         v.v_used <- true;
         TEident v, v.v_typ, false
      with Not_found -> error loc ("unbound variable " ^ id)
@@ -272,8 +288,14 @@ and expr_desc env loc = function
   | PEassign (lvl, el) ->
       if List.for_all (fun x -> islvalue x.pexpr_desc) lvl
         then
+          let nlvl = List.length lvl and nel = List.length el in
+          (
+            if nlvl < nel then error loc ("trop de r-values")
+            else if nlvl > nel then error loc ("trop de l-values")
+          );
           let newlvl = List.map (exprx env) lvl in
           let newel = List.map (exprx env) el in
+          validassign newlvl newel loc;
           TEassign (newlvl, newel), tvoid, false 
         else error loc "l-value attendue pour assignation"
   | PEreturn el ->
@@ -285,14 +307,51 @@ and expr_desc env loc = function
   | PEblock el ->
     let el_typee = List.map (exprx env) el in
     let rt = List.exists (rtx env) el in
-     TEblock el_typee, tvoid, rt
+    envactuel := env;
+    TEblock el_typee, tvoid, rt
   | PEincdec (e, op) ->
      let dx, tyx, rtx = expr_desc env loc e.pexpr_desc in
      if tyx = Tint
       then TEincdec (make dx tyx, op), Tint, false
       else error loc ("type int attendu pour ++/--")
-  | PEvars _ ->
-     (* TODO *) assert false 
+  | PEvars (il, ty, el) ->
+    let el_typee = List.map (exprx env) el in
+    match ty with
+    |None -> 
+      (
+        match el_typee with
+        | [] -> error loc ("besoin de type dans déclaration sans expression")
+        | [{expr_desc = TEcall (f,params)}] -> let listevars = nv_var_type il f.fn_typ loc in TEvars listevars, tvoid, false
+        |_ -> 
+          List.iter (fun x -> if x.expr_desc = TEnil then error loc "expression vide dans assign") el_typee;
+          let typelist = typeofexprlist el_typee in
+          let listevars = nv_var_type il typelist loc in TEvars listevars, tvoid, false
+      )
+      |Some typev ->
+        (
+          let t = type_type typev in
+          let ltypes = List.init (List.length il) (fun n -> t) in
+          match el_typee with
+          |[] -> let listevars = nv_var_type il ltypes loc in TEvars listevars, tvoid, false
+          |[{expr_desc = TEcall (f,params)}] -> 
+            if eqlist eq_type ltypes f.fn_typ 
+              then (let listevars = nv_var_type il ltypes loc in TEvars listevars, tvoid, false)
+              else error loc ("types incompatibles")
+          | _ -> let typelist = typeofexprlist el_typee in
+            if eqlist eq_type ltypes typelist 
+              then (let listevars = nv_var_type il ltypes loc in TEvars listevars, tvoid, false)
+              else error loc "types incompatibles"
+        )
+and nv_var_type li lt loc_act = match li,lt with
+    | [],[] -> []
+    | {loc;id}::q1,t::q2 -> let env,v = Env.var id loc t !envactuel in (envactuel := env; v::(nv_var_type q1 q2 loc_act))
+    | _,_ -> error loc_act "cannot assign"
+
+
+
+
+
+and typeofexprlist el = List.map (fun x -> x.expr_typ) el
 
 let found_main = ref false
 
@@ -380,8 +439,9 @@ let decl = function
     typederetour := listtotype returntype; (* on le garde en mémoire pendant le parcours *)
     let typesortie = List.map type_type typl in (* la liste des types de sortie passe de Ast.ptyp list à Tast.typ list *)
     let listevars,environnement = paramlisttovarlist params in (* on ajoute tous les paramètres d'entrée à l'environnement, créé à la volée par cette fonction *)
+    envactuel := environnement;
     let f = { fn_name = id; fn_params = listevars; fn_typ = typesortie} in (* on écrit notre Tast.function *)
-    let e, rt = expr environnement e in (* on vérifie le corps *)
+    let e, rt = expr !envactuel e in (* on vérifie le corps *)
     (if not rt && !typederetour <> tvoid then error loc ("manque return dans fonction"^id));
     TDfunction (f, e)
 
