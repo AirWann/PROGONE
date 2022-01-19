@@ -1,4 +1,4 @@
-make -f "/home/airwann/nvgit/PROGONE/source/Makefile" --dry-run --keep-going --print-directory
+make -f /home/airwann/nvgit/PROGONE/source/Makefile --dry-run --always-make --keep-going --print-directory
 make: Entering directory '/home/airwann/nvgit/PROGONE'
 make: Leaving directory '/home/airwann/nvgit/PROGONE'
  

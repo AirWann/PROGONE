@@ -100,6 +100,8 @@ let rec eq_type ty1 ty2 = match ty1, ty2 with
   | Tmany l1, Tmany l2 -> l1 = l2 
   | _ -> false
     (* TODO autres types *)
+
+(* pareil, mais gère les pointeurs *)
 let eq_typeLR  tyL tyR = match tyL with
 |Tptr t -> eq_type tyL tyR || eq_type t tyR
 |_ -> eq_type tyL tyR
@@ -135,6 +137,8 @@ module Env = struct
   (* TODO type () et vecteur de types *)
 end
 
+(* l'utilisation de ref rend les appels de fonctions plus agréables à gérer, 
+car en sortant on peut revenir à l'état d'avant (donc oublier les variables locales) *)
 let envactuel = ref Env.empty
 let tvoid = Tmany []
 let make d ty = { expr_desc = d; expr_typ = ty }
@@ -145,6 +149,8 @@ let rec islvalue = function
   | PEunop (Ustar, e) when e.pexpr_desc <> PEnil -> true
   | _ -> false
 
+
+(* sert pour des assignation d'une liste el d'expressions à une liste lvl de l values *)
 let validassign lvl el loc =
   let listetypesR1 = List.map (fun x -> x.expr_typ) el in
   let listetypesR2 = List.map typetolist listetypesR1 in
@@ -236,7 +242,11 @@ and expr_desc env loc = function
       let f = {fn_name = pf.pf_name.id ; fn_typ = List.map type_type pf.pf_typ ;
                 fn_params = List.map (fun (id,typ) -> new_var id.id id.loc (type_type typ)) pf.pf_params} in
       let typ = listtotype f.fn_typ in
-      TEcall(f,el_typee), typ , false
+      let typeargs = List.map (fun x -> x.expr_typ) el_typee in
+      if typeargs = List.map (fun x -> x.v_typ) f.fn_params (* TODO améliorer ce test. les listes passent mal. Formaliser plus clairement (listes ? Tmany ?) *)
+        then
+          TEcall(f,el_typee), typ , false
+        else error loc ("fonction"^f.fn_name^" appelée avec arguments de mauvais type")
      with
      |Not_found -> error loc ("appel de fonction "^id.id^" inconnue")
      )
@@ -318,34 +328,40 @@ and expr_desc env loc = function
     let el_typee = List.map (exprx env) el in
     match ty with
     |None -> 
-      (
-        match el_typee with
-        | [] -> error loc ("besoin de type dans déclaration sans expression")
-        | [{expr_desc = TEcall (f,params)}] -> let listevars = nv_var_type il f.fn_typ loc in TEvars listevars, tvoid, false
-        |_ -> 
-          List.iter (fun x -> if x.expr_desc = TEnil then error loc "expression vide dans assign") el_typee;
-          let typelist = typeofexprlist el_typee in
-          let listevars = nv_var_type il typelist loc in TEvars listevars, tvoid, false
-      )
+        (
+          match el_typee with
+          | [] -> 
+            error loc ("besoin de type dans déclaration sans expression")
+          | [{expr_desc = TEcall (f,params)}] -> 
+            let listevars = nv_var_type il f.fn_typ loc in TEvars listevars, tvoid, false
+          |_ -> 
+            List.iter (fun x -> if x.expr_desc = TEnil then error loc "expression vide dans assign") el_typee;
+            let typelist = typeofexprlist el_typee in
+            let listevars = nv_var_type il typelist loc in TEvars listevars, tvoid, false
+        )
       |Some typev ->
         (
           let t = type_type typev in
           let ltypes = List.init (List.length il) (fun n -> t) in
           match el_typee with
-          |[] -> let listevars = nv_var_type il ltypes loc in TEvars listevars, tvoid, false
+          |[] -> 
+            let listevars = nv_var_type il ltypes loc in TEvars listevars, tvoid, false
           |[{expr_desc = TEcall (f,params)}] -> 
             if eqlist eq_type ltypes f.fn_typ 
               then (let listevars = nv_var_type il ltypes loc in TEvars listevars, tvoid, false)
-              else error loc ("types incompatibles")
-          | _ -> let typelist = typeofexprlist el_typee in
+              else error loc "types incompatibles"
+          | _ -> 
+            let typelist = typeofexprlist el_typee in
             if eqlist eq_type ltypes typelist 
               then (let listevars = nv_var_type il ltypes loc in TEvars listevars, tvoid, false)
               else error loc "types incompatibles"
         )
-and nv_var_type li lt loc_act = match li,lt with
+(* prend une liste li d'ident, une liste lt de types, et créé des variables identifiées par li et typées par lt 
+en théorie, est toujours appelée sur les listes de même longueur*)
+and nv_var_type li lt loc_act = match li,lt with 
     | [],[] -> []
     | {loc;id}::q1,t::q2 -> let env,v = Env.var id loc t !envactuel in (envactuel := env; v::(nv_var_type q1 q2 loc_act))
-    | _,_ -> error loc_act "cannot assign"
+    | _,_ -> error loc_act "problème lors de création de liste de variables"
 
 
 
