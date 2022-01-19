@@ -4,6 +4,7 @@ main:
 	call F_main
 	xorq %rax, %rax
 	ret
+F_fact:
 F_main:
 
 print_int:
