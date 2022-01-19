@@ -242,11 +242,7 @@ and expr_desc env loc = function
       let f = {fn_name = pf.pf_name.id ; fn_typ = List.map type_type pf.pf_typ ;
                 fn_params = List.map (fun (id,typ) -> new_var id.id id.loc (type_type typ)) pf.pf_params} in
       let typ = listtotype f.fn_typ in
-      let typeargs = List.map (fun x -> x.expr_typ) el_typee in
-      if typeargs = List.map (fun x -> x.v_typ) f.fn_params (* TODO améliorer ce test. les listes passent mal. Formaliser plus clairement (listes ? Tmany ?) *)
-        then
-          TEcall(f,el_typee), typ , false
-        else error loc ("fonction"^f.fn_name^" appelée avec arguments de mauvais type")
+      TEcall(f,el_typee), typ , false
      with
      |Not_found -> error loc ("appel de fonction "^id.id^" inconnue")
      )
@@ -335,15 +331,6 @@ and expr_desc env loc = function
           | [{expr_desc = TEcall (f,params)}] -> 
             let listevars = nv_var_type il f.fn_typ loc in TEvars listevars, tvoid, false
           |_ -> 
-<<<<<<< HEAD
-        |_ -> 
-          |_ -> 
-        |_ -> 
-          |_ -> 
-        |_ -> 
-          |_ -> 
-=======
->>>>>>> aeb7fb2db2b0af59a06476fe70e19d7f5cc818a2
             List.iter (fun x -> if x.expr_desc = TEnil then error loc "expression vide dans assign") el_typee;
             let typelist = typeofexprlist el_typee in
             let listevars = nv_var_type il typelist loc in TEvars listevars, tvoid, false
