@@ -159,7 +159,21 @@ let rec expr (env : env) e = match e.expr_desc with
   | TEunop (Ustar, e1) ->
     (* TODO code pour * *) assert false 
   | TEprint el ->
-    (* TODO code pour Print *) assert false 
+    let rec aux = function
+    |[] -> nop
+    |e::xs -> 
+      expr env e ++
+      (
+        match e.expr_typ with
+        |Tint -> call "print_int"
+        |Tbool -> call "print_bool"
+        |Tstring -> call "print_string"
+        |Tstruct s -> nop (* TODO *)
+        |Tptr _ -> nop
+        |_ -> error dummy_loc "does not happen"
+      ) ++ call "print_space" ++ aux xs
+
+    in comment "début print" ++ aux el ++ comment "fin print"
   | TEident x ->
     (* TODO code pour x *) assert false 
   | TEassign ([{expr_desc=TEident x}], [e1]) ->
@@ -169,7 +183,21 @@ let rec expr (env : env) e = match e.expr_desc with
   | TEassign (_, _) ->
      assert false
   | TEblock el ->
-     (* TODO code pour block *) assert false
+     comment "début bloc" ++
+     let rec aux = function
+     |[] -> nop
+     |{expr_desc = TEvars(v)}::xs ->
+      List.fold_left 
+      (
+        fun res var ->
+        (if var.v_name = "_" then nop else (incr env.nb_locals; pushq (imm 0))) 
+        ++ res
+      ) nop v ++ 
+      aux xs
+     |e::xs -> expr env e ++ aux xs
+     in
+     aux el ++ 
+     comment "fin bloc"
   | TEif (e1, e2, e3) ->
      (* TODO code pour if *) assert false
   | TEfor (e1, e2) ->
@@ -191,13 +219,34 @@ let rec expr (env : env) e = match e.expr_desc with
   | TEincdec (e1, op) ->
     (* TODO code pour return e++, e-- *) assert false
 
+
+let rec nvars e = match e.expr_desc with
+|TEvars v -> List.length (List.filter (fun x -> x.v_name <> "_") v)
+|TEblock b -> List.fold_left (fun x y -> x + (nvars y)) 0 b
+|_ -> 0
+
 let function_ f e =
   if !debug then eprintf "function %s:@." f.fn_name;
-  (* TODO code pour fonction *) let s = f.fn_name in label ("F_" ^ s) 
+  (* TODO code pour fonction *) 
+  let s = f.fn_name in 
+  let n = nvars e in
+  let nparams = List.length f.fn_params in
+  let env = { exit_label = ""; ofs_this = nparams - 1; nb_locals = ref 0; next_local = n} in
+  
+  label ("F_" ^ s) ++
+  pushq !%rbp ++
+  movq !%rsp !%rbp ++
+  expr env e ++
+
+  movq !%rbp !%rsp ++
+  popq rbp ++
+  ret
+
+
 
 let decl code = function
-  | TDfunction (f, e) -> code ++ function_ f e
   | TDstruct _ -> code
+  | TDfunction (f, e) -> code ++ function_ f e
 
 let file ?debug:(b=false) dl =
   debug := b;
@@ -216,10 +265,45 @@ print_int:
         xorq    %rax, %rax
         call    printf
         ret
+print_bool:
+        test    %rdi, %rdi
+        jz      print_false
+        mov     $S_true, %rdi
+        call    printf
+        xorq    %rax, %rax
+        ret
+print_false:
+        mov     $S_false, %rdi
+        call    printf
+        xorq    %rax, %rax
+        ret
+print_string:
+        test    %rdi, %rdi
+        jz      print_nil
+        mov     %rdi, %rsi
+        mov     $S_string, %rdi
+        xorq    %rax, %rax
+        call    printf
+        ret
+print_nil:
+        mov     $S_nil, %rdi
+        xorq    %rax, %rax
+        call    printf
+        ret      
+print_space:
+        mov     $S_space, %rdi
+        xorq    %rax, %rax
+        call    printf
+        ret   
 "; (* TODO print pour d'autres valeurs *)
    (* TODO appel malloc de stdlib *)
     data =
       label "S_int" ++ string "%ld" ++
+      label "S_true" ++ string "true" ++
+      label "S_false" ++ string "false" ++
+      label "S_string" ++ string "%s" ++
+      label "S_nil" ++ string "<nil>" ++
+      label "S_space" ++ string " " ++
       (Hashtbl.fold (fun l s d -> label l ++ string s ++ d) strings nop)
     ;
   }
