@@ -28,7 +28,7 @@ open Format
 open Ast
 open Tast
 open X86_64
-
+open Typing
 let debug = ref false
 
 let strings = Hashtbl.create 32
@@ -40,8 +40,8 @@ let alloc_string =
     Hashtbl.add strings l s;
     l
 
-let malloc n = movq (imm n) (reg rdi) ++ call "malloc"
-let allocz n = movq (imm n) (reg rdi) ++ call "allocz"
+let malloc n = movq (imm n) !%rdi ++ call "malloc"
+let allocz n = movq (imm n) !%rdi ++ call "allocz"
 
 let sizeof = Typing.sizeof
 
@@ -64,36 +64,96 @@ let mk_bool d = { expr_desc = d; expr_typ = Tbool }
 let compile_bool f =
   let l_true = new_label () and l_end = new_label () in
   f l_true ++
-  movq (imm 0) (reg rdi) ++ jmp l_end ++
-  label l_true ++ movq (imm 1) (reg rdi) ++ label l_end
-
-let rec expr env e = match e.expr_desc with
+  movq (imm 0) !%rdi ++ jmp l_end ++
+  label l_true ++ movq (imm 1) !%rdi ++ label l_end
+let rec expr (env : env) e = match e.expr_desc with
   | TEskip ->
     nop
   | TEconstant (Cbool true) ->
-    movq (imm 1) (reg rdi)
+    movq (imm 1) !%rdi
   | TEconstant (Cbool false) ->
-    movq (imm 0) (reg rdi)
+    movq (imm 0) !%rdi
   | TEconstant (Cint x) ->
-    movq (imm64 x) (reg rdi)
+    movq (imm64 x) !%rdi
   | TEnil ->
-    xorq (reg rdi) (reg rdi)
+    xorq !%rdi !%rdi
   | TEconstant (Cstring s) ->
-    (* TODO code pour constante string *) assert false 
-  | TEbinop (Band, e1, e2) ->
-    (* TODO code pour ET logique lazy *) assert false 
-  | TEbinop (Bor, e1, e2) ->
-    (* TODO code pour OU logique lazy *) assert false 
-  | TEbinop (Blt | Ble | Bgt | Bge as op, e1, e2) ->
-    (* TODO code pour comparaison ints *) assert false 
+    movq (ilab (alloc_string s)) !%rdi
+  | TEbinop (Band, e1, e2) -> (* on l'écrit : "SI non e1 ALORS false SINON e2" *)
+    expr env
+      ( mk_bool
+        (
+          TEif
+          (
+            mk_bool (TEunop(Unot, e1)),
+            mk_bool (TEconstant (Cbool false)),
+            e2
+          )
+        )
+      )
+  | TEbinop (Bor, e1, e2) -> (* "SI e1 ALORS vrai SINON e2" *)
+  expr env
+  ( mk_bool
+    (
+      TEif
+      (
+        e1,
+        mk_bool (TEconstant (Cbool true)),
+        e2
+      )
+    )
+  )
+  | TEbinop (Blt | Ble | Bgt | Bge as op, e1, e2) -> (* on compile e1 : il se retrouve dans rdi. Ensuite, on le déplace, on met e2 dans rdi, et on compare *)
+    expr env e1 ++
+    movq !%rdi !%rax ++
+    expr env e2 ++
+    cmpq !%rdi !%rax ++
+    compile_bool (
+      match op with
+        |Blt -> jl
+        |Ble -> jle
+        |Bgt -> jg
+        |Bge -> jge
+        |_ -> error dummy_loc "does not happen"
+    )
+
   | TEbinop (Badd | Bsub | Bmul | Bdiv | Bmod as op, e1, e2) ->
-    (* TODO code pour arithmetique ints *) assert false 
+    expr env e1 ++
+    movq !%rdi !%rax ++
+    expr env e2 ++
+    (
+    match op with
+    | Badd -> addq !%rax !%rdi
+    | Bsub -> subq !%rax !%rdi
+    | Bmul -> imulq !%rax !%rdi
+    | Bdiv -> 
+      movq (imm 0) !%rdx ++
+      idivq !%rdi ++
+      movq !%rax !%rdi
+    | Bmod -> 
+      movq (imm 0) !%rdx ++
+      idivq !%rdi ++
+      movq !%rdx !%rdi
+    |_ -> error dummy_loc "does not happen"
+    )
   | TEbinop (Beq | Bne as op, e1, e2) ->
-    (* TODO code pour egalite toute valeur *) assert false 
+    expr env e1 ++
+    movq !%rdi !%rax ++
+    expr env e2 ++
+    cmpq !%rdi !%rax ++
+    compile_bool 
+    (
+      match op with
+      |Beq -> je
+      |Bne -> jne
+      | _ -> error dummy_loc "does not happen"
+    )
   | TEunop (Uneg, e1) ->
-    (* TODO code pour negation ints *) assert false 
+    expr env e1 ++
+    negq !%rdi
   | TEunop (Unot, e1) ->
-    (* TODO code pour negation bool *) assert false 
+    expr env e1 ++
+    notq !%rdi
   | TEunop (Uamp, e1) ->
     (* TODO code pour & *) assert false 
   | TEunop (Ustar, e1) ->
@@ -146,9 +206,9 @@ let file ?debug:(b=false) dl =
   { text =
       globl "main" ++ label "main" ++
       call "F_main" ++
-      xorq (reg rax) (reg rax) ++
+      xorq (!%rax) (!%rax) ++
       ret ++
-      funs ++
+      funs ++ 
       inline "
 print_int:
         movq    %rdi, %rsi

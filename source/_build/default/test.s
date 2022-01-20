@@ -2,6 +2,7 @@
 	.globl	main
 main:
 	call F_main
+	incq $4
 	xorq %rax, %rax
 	ret
 F_main:

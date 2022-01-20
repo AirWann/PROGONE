@@ -271,7 +271,7 @@ and expr_desc env loc = function
       let v = Env.find id !envactuel in 
         v.v_used <- true;
         TEident v, v.v_typ, false
-     with Not_found -> error loc ("unbound variable " ^ id)
+     with Not_found -> error loc ("variable inconnue " ^ id)
     )
   | PEdot (e, id) ->
      (
