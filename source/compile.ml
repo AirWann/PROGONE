@@ -66,6 +66,7 @@ let compile_bool f =
   f l_true ++
   movq (imm 0) !%rdi ++ jmp l_end ++
   label l_true ++ movq (imm 1) !%rdi ++ label l_end
+
 let rec expr (env : env) e = match e.expr_desc with
   | TEskip ->
     nop
@@ -199,7 +200,15 @@ let rec expr (env : env) e = match e.expr_desc with
      aux el ++ 
      comment "fin bloc"
   | TEif (e1, e2, e3) ->
-     (* TODO code pour if *) assert false
+    let l_false = new_label () and l_end = new_label () in
+     expr env e1 ++
+     testq !%rdi !%rdi ++
+     jz l_false ++
+     expr env e2 ++
+     jmp l_end ++
+     label l_false ++
+     expr env e3 ++
+     label l_end
   | TEfor (e1, e2) ->
      (* TODO code pour for *) assert false
   | TEnew ty ->
@@ -229,9 +238,9 @@ let function_ f e =
   if !debug then eprintf "function %s:@." f.fn_name;
   (* TODO code pour fonction *) 
   let s = f.fn_name in 
-  let n = nvars e in
+(*   let n = nvars e in *)
   let nparams = List.length f.fn_params in
-  let env = { exit_label = ""; ofs_this = nparams - 1; nb_locals = ref 0; next_local = nparams} in
+  let env = { exit_label = "E_"^f.fn_name; ofs_this = nparams - 1; nb_locals = ref 0; next_local = nparams} in
   
   label ("F_" ^ s) ++
   pushq !%rbp ++

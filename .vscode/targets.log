@@ -2,27 +2,48 @@ make all -f /home/airwann/nvgit/PROGONE/source/Makefile --print-data-base --no-b
 make: *** No rule to make target '*.ml*', needed by '_build/default/main.exe'.  Stop.
  
 # GNU Make 4.2.1
+ 
 # Built for x86_64-pc-linux-gnu
+ 
 # Copyright (C) 1988-2016 Free Software Foundation, Inc.
+ 
 # License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+ 
 # This is free software: you are free to change and redistribute it.
+ 
 # There is NO WARRANTY, to the extent permitted by law.
+ 
 
-# Make data base, printed on Thu Jan 20 13:36:56 2022
+ 
+# Make data base, printed on Thu Jan 20 18:24:03 2022
+ 
 
 # Variables
+ 
 
+ 
 # automatic
+ 
 <D = $(patsubst %/,%,$(dir $<))
+ 
 # automatic
+ 
 ?F = $(notdir $?)
+ 
 # environment
+ 
 OPAM_SWITCH_PREFIX = /home/airwann/.opam/default
+ 
 # default
+ 
 .SHELLFLAGS := -c
+ 
 # environment
+ 
 OCAML_TOPLEVEL_PATH = /home/airwann/.opam/default/lib/toplevel
+ 
 # environment
+ 
 VSCODE_AGENT_FOLDER = /home/airwann/.vscode-server
 # environment
 VSCODE_LOG_NATIVE = false
@@ -39,6 +60,7 @@ EXE = _build/default/main.exe
 # makefile
 CURDIR := /home/airwann/nvgit/PROGONE
 # makefile
+ 
 SHELL = /bin/sh
 # environment
 VSCODE_NLS_CONFIG = {"locale":"fr","availableLanguages":{"*":"fr"},"_languagePackId":"9fdd4736c50ab5d00bf618b3d10bedcc.fr","_translationsConfigFile":"/home/airwann/.vscode-server/data/clp/9fdd4736c50ab5d00bf618b3d10bedcc.fr/tcf.json","_cacheRoot":"/home/airwann/.vscode-server/data/clp/9fdd4736c50ab5d00bf618b3d10bedcc.fr","_resolvedLanguagePackCoreLocation":"/home/airwann/.vscode-server/data/clp/9fdd4736c50ab5d00bf618b3d10bedcc.fr/899d46d82c4c95423fb7e10e68eba52050e30ba3","_corruptedFile":"/home/airwann/.vscode-server/data/clp/9fdd4736c50ab5d00bf618b3d10bedcc.fr/corrupted.info","_languagePackSupport":true}
@@ -63,7 +85,7 @@ PATH = /home/airwann/.vscode-server/bin/899d46d82c4c95423fb7e10e68eba52050e30ba3
 # environment
 VSCODE_LOG_STACK = false
 # environment
-VSCODE_IPC_HOOK_CLI = /tmp/vscode-ipc-ac9f59b7-ce1a-42cc-bf5b-843483589308.sock
+VSCODE_IPC_HOOK_CLI = /tmp/vscode-ipc-28864d92-6bda-4bda-b5c1-851a0a3e7af8.sock
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
 # environment
@@ -230,6 +252,7 @@ test: _build/default/main.exe test.go
 # Not a target:
 /home/airwann/nvgit/PROGONE/source/Makefile:
 #  Implicit rule search has been done.
+ 
 #  Last modified 2021-11-27 17:35:58.595755
 #  File has been updated.
 #  Successfully updated.
@@ -264,6 +287,6 @@ _build/default/main.exe: *.ml*
 # strcache performance: lookups = 33 / hit rate = 39%
 # hash-table stats:
 # Load=20/8192=0%, Rehash=0, Collisions=1/33=3%
-# Finished Make data base on Thu Jan 20 13:36:56 2022
+# Finished Make data base on Thu Jan 20 18:24:03 2022
 
  

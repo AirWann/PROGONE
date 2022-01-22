@@ -3,7 +3,6 @@
 main:
 	call F_main
 	xorq %rax, %rax
-	xorq 0(%rdi), 0(%rdi)
 	ret
 F_main:
 	pushq %rbp
@@ -11,8 +10,8 @@ F_main:
 #début bloc
 #début bloc
 #début print
-	movq $9, %rdi
-	call print_int
+	movq $S_1, %rdi
+	call print_string
 	call print_space
 #fin print
 #fin bloc
@@ -70,3 +69,5 @@ S_nil:
 	.string "<nil>"
 S_space:
 	.string " "
+S_1:
+	.string "Hello World !"
