@@ -9,9 +9,20 @@ F_main:
 	movq %rsp, %rbp
 #début bloc
 #début bloc
+#variable x id 1 position 1
+	pushq $0
+#variable y id 2 position 2
+	pushq $0
 #début print
-	movq $S_1, %rdi
-	call print_string
+#on regarde la variable x position 1
+	movq -8(%rbp), %rdi
+	call print_int
+	call print_space
+#fin print
+#début print
+#on regarde la variable y position 2
+	movq -16(%rbp), %rdi
+	call print_int
 	call print_space
 #fin print
 #fin bloc
@@ -69,5 +80,3 @@ S_nil:
 	.string "<nil>"
 S_space:
 	.string " "
-S_1:
-	.string "Hello World !"

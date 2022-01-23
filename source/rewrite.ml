@@ -92,7 +92,7 @@ let rw_add v e rw =
 
 let rec expr rw e =
   let _ty = e.expr_typ in
-  let mk d = { e with expr_desc = d } in (* e dans lequel on change la desc pour d *)
+  let mk d = { e with expr_desc = d } in
   match e.expr_desc with
   | TEskip
   | TEnil

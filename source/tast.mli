@@ -35,6 +35,7 @@ and var = {
            v_typ: typ;
   mutable v_used: bool;
   mutable v_addr: bool; (* usage de &x *)
+  mutable v_stack: int;
   (* TODO autres informations pour la production de code *)
 }
 

@@ -114,7 +114,7 @@ let new_var =
   let id = ref 0 in
   fun x loc ?(used=false) ty ->
     incr id;
-    { v_name = x; v_id = !id; v_loc = loc; v_typ = ty; v_used = used; v_addr = false }
+    { v_name = x; v_id = !id; v_loc = loc; v_typ = ty; v_used = used; v_addr = false ; v_stack = -1}
 
 module Env = struct
   module M = Map.Make(String)
@@ -247,11 +247,11 @@ and expr_desc env loc = function
      |Not_found -> error loc ("appel de fonction "^id.id^" inconnue")
      )
   | PEfor (e, b) ->
-     let exb, rtb = expr env b in
+     let exb, rtb = expr env e in (* on regarde le test booléen, on vérifie que c'est un booléen *)
      (if rtb then error loc ("le test booléen retourne qqch"););
      if exb.expr_typ = Tbool 
         then
-          let ex, rx = expr env e in
+          let ex, rx = expr env b in
           TEfor (ex, exb), tvoid, rx
         else error loc ("type bool attendu dans test de for")
   | PEif (e1, e2, e3) ->
@@ -271,7 +271,7 @@ and expr_desc env loc = function
       let v = Env.find id !envactuel in 
         v.v_used <- true;
         TEident v, v.v_typ, false
-     with Not_found -> error loc ("variable inconnue " ^ id)
+     with Not_found -> error loc ("variable inconnue" ^ id)
     )
   | PEdot (e, id) ->
      (
@@ -313,7 +313,7 @@ and expr_desc env loc = function
   | PEblock el ->
     let el_typee = List.map (exprx env) el in
     let rt = List.exists (rtx env) el in
-    envactuel := env;
+(*     envactuel := env; *) (* cette ligne fait planter tous les for ??? je ne comprends pas pourquoi elle existe ??? lol *)
     TEblock el_typee, tvoid, rt
   | PEincdec (e, op) ->
      let dx, tyx, rtx = expr_desc env loc e.pexpr_desc in
@@ -348,7 +348,7 @@ and expr_desc env loc = function
               else error loc "types incompatibles"
           | _ -> 
             let typelist = typeofexprlist el_typee in
-            if eqlist eq_type ltypes typelist 
+            if eqlist eq_typeLR ltypes typelist 
               then (let listevars = nv_var_type il ltypes loc in TEvars listevars, tvoid, false)
               else error loc "types incompatibles"
         )

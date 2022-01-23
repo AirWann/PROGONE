@@ -44,19 +44,18 @@ let malloc n = movq (imm n) !%rdi ++ call "malloc"
 let allocz n = movq (imm n) !%rdi ++ call "allocz"
 
 let sizeof = Typing.sizeof
-
 let new_label =
   let r = ref 0 in fun () -> incr r; "L_" ^ string_of_int !r
 
 type env = {
   exit_label: string;
   ofs_this: int;
-  nb_locals: int ref; (* maximum *)
+  mutable nb_locals: int; (* maximum *)
   next_local: int; (* 0, 1, ... *)
 }
 
 let empty_env =
-  { exit_label = ""; ofs_this = -1; nb_locals = ref 0; next_local = 0 }
+  { exit_label = ""; ofs_this = -1; nb_locals = 0; next_local = 0 }
 
 let mk_bool d = { expr_desc = d; expr_typ = Tbool }
 
@@ -67,6 +66,7 @@ let compile_bool f =
   movq (imm 0) !%rdi ++ jmp l_end ++
   label l_true ++ movq (imm 1) !%rdi ++ label l_end
 
+let top = ref 0
 let rec expr (env : env) e = match e.expr_desc with
   | TEskip ->
     nop
@@ -104,7 +104,8 @@ let rec expr (env : env) e = match e.expr_desc with
       )
     )
   )
-  | TEbinop (Blt | Ble | Bgt | Bge as op, e1, e2) -> (* on compile e1 : il se retrouve dans rdi. Ensuite, on le déplace, on met e2 dans rdi, et on compare *)
+  | TEbinop (Blt | Ble | Bgt | Bge as op, e1, e2) -> 
+    (* on compile e1 : il se retrouve dans rdi. Ensuite, on le déplace, on met e2 dans rdi, et on compare *)
     expr env e1 ++
     movq !%rdi !%rax ++
     expr env e2 ++
@@ -175,8 +176,9 @@ let rec expr (env : env) e = match e.expr_desc with
       ) ++ call "print_space" ++ aux xs
 
     in comment "début print" ++ aux el ++ comment "fin print"
-  | TEident x ->
-    (* TODO code pour x *) assert false 
+  | TEident x -> 
+    comment ("on regarde la variable "^x.v_name^" position "^(string_of_int x.v_stack)) ++
+    movq (ind ~ofs:((-8)*x.v_stack) rbp) !%rdi
   | TEassign ([{expr_desc=TEident x}], [e1]) ->
     (* TODO code pour x := e *) assert false 
   | TEassign ([lv], [e1]) ->
@@ -188,13 +190,24 @@ let rec expr (env : env) e = match e.expr_desc with
      let rec aux = function
      |[] -> nop
      |{expr_desc = TEvars(v)}::xs ->
-      List.fold_left 
-      (
-        fun res var ->
-        (if var.v_name = "_" then nop else (incr env.nb_locals; pushq (imm 0))) 
-        ++ res
-      ) nop v ++ 
-      aux xs
+        let vars = List.fold_left 
+        (
+          fun res var ->
+          (
+            if var.v_name = "_" then nop 
+            else 
+              (
+                incr top;
+                env.nb_locals <- env.nb_locals + 1 ;
+                var.v_stack <- !top;
+                comment ("variable "^var.v_name^" id "^(string_of_int var.v_id)^" position "^(string_of_int (var.v_stack))) ++
+                pushq (imm 0);
+              )
+            ) 
+          ++ res
+        ) nop v 
+        in
+        vars ++ aux xs
      |e::xs -> expr env e ++ aux xs
      in
      aux el ++ 
@@ -210,7 +223,14 @@ let rec expr (env : env) e = match e.expr_desc with
      expr env e3 ++
      label l_end
   | TEfor (e1, e2) ->
-     (* TODO code pour for *) assert false
+     let l_test = new_label () and l_exit = new_label () in
+     label l_test ++
+     expr env e1 ++
+     testq !%rdi !%rdi ++
+     jz l_exit ++
+     expr env e2 ++
+     jmp l_test ++
+     label l_exit
   | TEnew ty ->
      (* TODO code pour new S *) assert false
   | TEcall (f, el) ->
@@ -226,8 +246,7 @@ let rec expr (env : env) e = match e.expr_desc with
   | TEreturn _ ->
      assert false
   | TEincdec (e1, op) ->
-    (* TODO code pour return e++, e-- *) assert false
-
+    assert false
 
 let rec nvars e = match e.expr_desc with
 |TEvars v -> List.length (List.filter (fun x -> x.v_name <> "_") v)
@@ -240,13 +259,13 @@ let function_ f e =
   let s = f.fn_name in 
 (*   let n = nvars e in *)
   let nparams = List.length f.fn_params in
-  let env = { exit_label = "E_"^f.fn_name; ofs_this = nparams - 1; nb_locals = ref 0; next_local = nparams} in
+  let env = { exit_label = "E_"^f.fn_name; ofs_this = nparams - 1; nb_locals = 0; next_local = nparams} in
   
   label ("F_" ^ s) ++
   pushq !%rbp ++
   movq !%rsp !%rbp ++
   expr env e ++
-
+  (* il manque des trucs *)
   movq !%rbp !%rsp ++
   popq rbp ++
   ret
